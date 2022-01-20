@@ -1,0 +1,30 @@
+// Copyright (c) 2022 yeqown
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+
+syntax = "proto3";
+
+package fieldmask.option;
+
+option go_package = "github.com/yeqown/protoc-gen-fieldmask/fieldmask;fieldmask";
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+  optional FieldMask Option = 1071;
+}
+
+// FieldMask rules applied at the field level
+message FieldMask {
+  // message indicates the Message type that was used to apply FieldMask rules.
+  string message = 1;
+}

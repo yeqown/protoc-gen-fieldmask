@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package fm.example.normal;
+
+import "google/protobuf/field_mask.proto";
+import "fieldmask/option.proto";
+
+option go_package = "/;normal";
+
+message UserInfoRequest {
+  string user_id = 1;
+  google.protobuf.FieldMask field_mask = 2 [ (fieldmask.option.Option) = {message: "UserInfoResponse"}];
+}
+
+message Address {
+  string country = 1;
+  string province = 2;
+}
+
+message UserInfoResponse {
+  string user_id = 1;
+  string name = 2;
+  string email = 3;
+  Address address = 4;
+}
