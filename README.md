@@ -12,6 +12,14 @@ It looks like `grapgql` but only takes effect on the server inside calls.
 To help developer to avoid repeating codes to deal with `FieldMask` message, this plugin generates a set of utilities to 
 deal with `FieldMask` message.
 
+### Features
+
+- [x] support field option in `in` message
+- [x] generates `Mask_$field` to `in` message type which declare in `in.FieldMask` option.
+- [x] generate `FieldMask_Filter` and `FieldMask_Prune` to `in` message, quickly apply field mask.  
+- [x] generates `Masked_$field` to `$out_FieldMask` support quickly judge field masking. 
+- [ ] support mask `in` fields in `incremental updating` case.
+
 ### Installation
 
 ```sh
@@ -40,7 +48,9 @@ import "google/protobuf/field_mask.proto";
 
 message UserInfoRequest {
   string user_id = 1;
-  google.protobuf.FieldMask field_mask = 2 [option = {message: "UserInfoResponse"}];
+  google.protobuf.FieldMask field_mask = 2 [fieldmask.option.Option = {message: "UserInfoResponse"}];
+  // later version would think about following option, to support more usecase in developing.
+  // google.protobuf.FieldMask field_mask = 2 [fieldmask.option.Option = {in: {gen: true}, out: {gen: true, message: "UserInfoResponse"} }];
 }
 
 message Address {
