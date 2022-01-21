@@ -1,8 +1,13 @@
 # protoc-gen-fieldmask
 
-Generate FieldMask utilities for protobuf, support [Go](https://golang.org), maybe more programing languages later.
- FieldMask is a protobuf message type, it's used to represent a set of fields to response to `Client` side. It looks 
-like `grapgql` but takes effect on the server inside calls.
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/yeqown/protoc-gen-fieldmask)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/yeqown/protoc-gen-fieldmask)
+[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+
+Generate [FieldMask](https://pkg.go.dev/google.golang.org/protobuf/types/known/fieldmaskpb) utilities for protobuf, 
+support [Go](https://golang.org), maybe more programing languages later. FieldMask is a protobuf message type, 
+it's used to represent a set of fields those should be contained in response, and sent to `Client`. 
+It looks like `grapgql` but only takes effect on the server inside calls.
 
 To help developer to avoid repeating codes to deal with `FieldMask` message, this plugin generates a set of utilities to 
 deal with `FieldMask` message.
@@ -31,7 +36,7 @@ protoc \
 ```protobuf
 syntax = "proto3";
 
-import "google/protobuf/types/known/fieldmaskpb.proto";
+import "google/protobuf/field_mask.proto";
 
 message UserInfoRequest {
   string user_id = 1;
