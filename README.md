@@ -1,7 +1,11 @@
 # protoc-gen-fieldmask
 
-Generate FieldMask utilities for protobuf, support [Go](https://golang.org), maybe more programing languages
-later.
+Generate FieldMask utilities for protobuf, support [Go](https://golang.org), maybe more programing languages later.
+ FieldMask is a protobuf message type, it's used to represent a set of fields to response to `Client` side. It looks 
+like `grapgql` but takes effect on the server inside calls.
+
+To help developer to avoid repeating codes to deal with `FieldMask` message, this plugin generates a set of utilities to 
+deal with `FieldMask` message.
 
 ### Installation
 
@@ -22,10 +26,10 @@ protoc \
 
 ### Generated Preview
 
-coding proto file：
+1. coding proto file [user.proto](./examples/normal/user.proto)：
 
 ```protobuf
-syntax= "proto3";
+syntax = "proto3";
 
 import "google/protobuf/types/known/fieldmaskpb.proto";
 
@@ -47,46 +51,86 @@ message UserInfoResponse {
 }
 ```
 
-generated `*.fm.go`：
+2. generated [user.pb.go](./examples/normal/user.pb.go), [user.pb.fm.go](./examples/normal/user.pb.fm.go)：
+
+```sh
+cd examples && make gen-normal
+
+# or generate them manually
+cd examples
+protoc \
+        -I./normal \
+        -I../proto \
+        --go_out=paths=source_relative:./normal \
+        --fieldmask_out=paths=source_relative,lang=go:./normal \
+        ./normal/user.proto
+```
+
+3. sample usage codes, on the one hand, to minimize changes to existing code, 
+you just omit fields by field mask like this:
 
 ```go
-package api
-
-func (req *UserInfoRequest) Mask_UserId() *UserInfoRequest {return nil}
-func (req *UserInfoRequest) Mask_Name() *UserInfoRequest {return nil}
-func (req *UserInfoRequest) Mask_Email() *UserInfoRequest {return nil}
-func (req *UserInfoRequest) Mask_Adress() *UserInfoRequest {return nil}
-func (req *UserInfoRequest) Mask_Adress_Country() *UserInfoRequest {return nil}
-func (req *UserInfoRequest) Mask_Adress_Province() *UserInfoRequest {return nil}
-// FieldMaskWithMode generated a message_FieldMask from UserInfoRequest
-//
-// mode：decide which mode will UserInfoResponse_FieldMask acts.
-// prune：remove fields those not in UserInfoRequest.field_mask.
-// filter：keep fields those in UserInfoRequest.field_mask.
-func (req *UserInfoRequest) FieldMaskWithMode(mode FieldMask_Mode) *UserInfoResponse_FieldMask {return nil}
-func (req *UserInfoRequest) FieldMask_Filter() *UserInfoResponse_FieldMask {return nil}
-func (req *UserInfoRequest) FieldMask_Prune() *UserInfoResponse_FieldMask {return nil}
-
-
-type UserInfoResponse struct {}
-
-// UserInfoResponse_FieldMask is a functions set to help FieldMask usage. 
-type UserInfoResponse_FieldMask struct {
-	maskedMap map[string]struct{}
+func main() {
+  req := &normal.UserInfoRequest{
+    UserId:    "123123",
+    FieldMask: nil,
+  }
+  
+  // enable field mask on specific fields.
+  req.Mask_Email()
+  req.Mask_Name()
+  
+  
+  filter := req.FieldMask_Filter()
+  // or use prune mode, so clear fields those are masked. 
+  // prune := req.FieldMask_Prune()
+  
+  resp := &normal.UserInfoResponse{
+    UserId: "69781",
+    Name:   "yeqown",
+    Email:  "yeqown@gmail.com",
+    Address: &normal.Address{
+      Country:  "China",
+      Province: "Sichuan",
+    },
+  }
+  
+  // makes filter or prune effect on resp.
+  prune.Mask(resp)
 }
-func (fm *UserInfoResponse_FieldMask) Masked_UserId() bool {return false}
-func (fm *UserInfoResponse_FieldMask) Masked_Name() bool {return false}
-// ... more Include_xxx()
+```
 
-func (fm *UserInfoResponse_FieldMask) Mask(msg *UserInfoResponse) *UserInfoResponse {return nil}
+on the other hand, you can take FieldMask effect before the `resp` has been filled, 
+so that you can ignore unnecessary calculating or remote calls:
+
+```go
+func main() {
+  req := &normal.UserInfoRequest{
+    UserId:    "123123",
+    FieldMask: nil,
+  }
+  
+  // enable field mask on specific fields.
+  req.Mask_Email()
+  req.Mask_Name()
+  
+  filter := req.FieldMask_Filter()
+  resp := new(normal.UserInfoResponse)
+  if filter.Masked_Email() {
+    resp.Email = "yeqown@gmail.com"
+  }
+  if filter.Masked_Name() {
+    resp.Name = "yeqown"
+  }
+}
 ```
 
 ### How to debug
 
 - prepare a `debugdata`
 - install `protoc-gen-debug`: `go install github.com/lyft/protoc-gen-star/protoc-gen-debug@latest`
-- compile target proto file with `protoc-gen-debug`: 
-	
+- compile target proto file with `protoc-gen-debug`:
+
     ```sh
     protoc \
         -I=./examples/normal \
@@ -95,5 +139,5 @@ func (fm *UserInfoResponse_FieldMask) Mask(msg *UserInfoResponse) *UserInfoRespo
         --debug_out="./debugdata,lang=go:./debugdata" \
         ./examples/normal/user.proto
     ```
-- debug [Test_ForDebug](./internal/module/fieldmask_test.go#L46) test suite 
-in [internal/module/fieldmask_test.go](./internal/module/fieldmask_test.go)
+- debug [Test_ForDebug](./internal/module/fieldmask_test.go#L46) test suite
+  in [internal/module/fieldmask_test.go](./internal/module/fieldmask_test.go)
