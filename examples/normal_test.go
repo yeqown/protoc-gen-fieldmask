@@ -1,1 +1,89 @@
 package examples
+
+import (
+	"testing"
+
+	"examples/normal"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
+)
+
+func Test_FieldMask_Filter(t *testing.T) {
+	req := &normal.UserInfoRequest{
+		UserId:    "123123",
+		FieldMask: nil,
+	}
+
+	req.Mask_Email()
+	req.Mask_Name()
+	assert.Equal(t, 2, len(req.FieldMask.GetPaths()))
+
+	byts, err := protojson.Marshal(req)
+	require.NoError(t, err)
+	t.Logf("req: %s", byts)
+
+	filter := req.FieldMask_Filter()
+	assert.NotNil(t, filter)
+
+	resp := &normal.UserInfoResponse{
+		UserId: "69781",
+		Name:   "yeqown",
+		Email:  "yeqown@gmail.com",
+		Address: &normal.Address{
+			Country:  "China",
+			Province: "Sichuan",
+		},
+	}
+
+	filter.Mask(resp)
+
+	assert.NotEmpty(t, resp.Name)
+	assert.NotEmpty(t, resp.Email)
+	assert.Empty(t, resp.Address)
+	assert.Empty(t, resp.UserId)
+
+	byts2, err2 := protojson.Marshal(resp)
+	require.NoError(t, err2)
+	t.Logf("resp: %s", byts2)
+}
+
+func Test_FieldMask_Prune(t *testing.T) {
+	req := &normal.UserInfoRequest{
+		UserId:    "123123",
+		FieldMask: nil,
+	}
+
+	req.Mask_Email()
+	req.Mask_Name()
+	assert.Equal(t, 2, len(req.FieldMask.GetPaths()))
+
+	byts, err := protojson.Marshal(req)
+	require.NoError(t, err)
+	t.Logf("req: %s", byts)
+
+	prune := req.FieldMask_Prune()
+	assert.NotNil(t, prune)
+
+	resp := &normal.UserInfoResponse{
+		UserId: "69781",
+		Name:   "yeqown",
+		Email:  "yeqown@gmail.com",
+		Address: &normal.Address{
+			Country:  "China",
+			Province: "Sichuan",
+		},
+	}
+
+	prune.Mask(resp)
+
+	assert.Empty(t, resp.Name)
+	assert.Empty(t, resp.Email)
+	assert.NotEmpty(t, resp.Address)
+	assert.NotEmpty(t, resp.UserId)
+
+	byts2, err2 := protojson.Marshal(resp)
+	require.NoError(t, err2)
+	t.Logf("resp: %s", byts2)
+}

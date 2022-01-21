@@ -15,7 +15,7 @@ syntax = "proto3";
 
 package fieldmask.option;
 
-option go_package = "github.com/yeqown/protoc-gen-fieldmask/fieldmask;fieldmask";
+option go_package = "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask;fieldmask";
 
 import "google/protobuf/descriptor.proto";
 
@@ -27,4 +27,12 @@ extend google.protobuf.FieldOptions {
 message FieldMask {
   // message indicates the Message type that was used to apply FieldMask rules.
   string message = 1;
+}
+
+enum MaskMode {
+  // FiledMaskMode_Filter indicates that the only fields in fieldmask should be kept.
+  Filter = 0;
+
+  // FiledMaskMode_Prune indicates that the field in fieldmask should be removed.
+  Prune = 1;
 }
