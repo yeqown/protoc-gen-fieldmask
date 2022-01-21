@@ -1,7 +1,13 @@
 # protoc-gen-fieldmask
 
-Generate FieldMask utility functions for protobuf
+Generate FieldMask utilities for protobuf, support [Go](https://golang.org), maybe more programing languages
+later.
 
+### Installation
+
+```sh
+go install github.com/yeqwown/protoc-gen-fieldmask@latest
+```
 
 ### Get Started
 
@@ -10,7 +16,7 @@ protoc \
 	-I. \
 	-I$YOUR_PROTO_PATH \
 	--go_out=paths=source_relative:. \
-	--fieldmask_out=paths=source_relative:. \
+	--fieldmask_out=paths=source_relative,lang=go:. \
 	example.proto
 ```
 
@@ -46,29 +52,20 @@ generated `*.fm.go`：
 ```go
 package api
 
-type FieldMask_Mode uint8 
-
-const (
-	FieldMask_FILTER FieldMask_Mode = iota
-	FieldMask_PRUNE
-)
-
-type UserInfoRequest struct {
-	// ...
-}
-
 func (req *UserInfoRequest) Mask_UserId() *UserInfoRequest {return nil}
 func (req *UserInfoRequest) Mask_Name() *UserInfoRequest {return nil}
 func (req *UserInfoRequest) Mask_Email() *UserInfoRequest {return nil}
 func (req *UserInfoRequest) Mask_Adress() *UserInfoRequest {return nil}
 func (req *UserInfoRequest) Mask_Adress_Country() *UserInfoRequest {return nil}
 func (req *UserInfoRequest) Mask_Adress_Province() *UserInfoRequest {return nil}
-// FieldMask generated a message_FieldMask from UserInfoRequest
+// FieldMaskWithMode generated a message_FieldMask from UserInfoRequest
 //
 // mode：decide which mode will UserInfoResponse_FieldMask acts.
 // prune：remove fields those not in UserInfoRequest.field_mask.
 // filter：keep fields those in UserInfoRequest.field_mask.
-func (req *UserInfoRequest) FieldMask(mode FieldMask_Mode) *UserInfoResponse_FieldMask {return nil}
+func (req *UserInfoRequest) FieldMaskWithMode(mode FieldMask_Mode) *UserInfoResponse_FieldMask {return nil}
+func (req *UserInfoRequest) FieldMask_Filter() *UserInfoResponse_FieldMask {return nil}
+func (req *UserInfoRequest) FieldMask_Prune() *UserInfoResponse_FieldMask {return nil}
 
 
 type UserInfoResponse struct {}
@@ -98,4 +95,5 @@ func (fm *UserInfoResponse_FieldMask) Mask(msg *UserInfoResponse) *UserInfoRespo
         --debug_out="./debugdata,lang=go:./debugdata" \
         ./examples/normal/user.proto
     ```
-- use 
+- debug [Test_ForDebug](./internal/module/fieldmask_test.go#L46) test suite 
+in [internal/module/fieldmask_test.go](./internal/module/fieldmask_test.go)
