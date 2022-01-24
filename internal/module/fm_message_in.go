@@ -7,27 +7,12 @@ import (
 )
 
 type checkInMessageVO struct {
-	ok        bool
-	fieldMask struct {
-		varName        string
-		fieldExtension *pbfieldmask.FieldMask
-		fmField        pgs.Field
-	}
+	FieldMaskOption *pbfieldmask.FieldMask
+	FieldMaskField  pgs.Field
 }
 
-func newCheckInMessageVO() *checkInMessageVO {
-	return &checkInMessageVO{
-		ok: false,
-		fieldMask: struct {
-			varName        string
-			fieldExtension *pbfieldmask.FieldMask
-			fmField        pgs.Field
-		}{
-			varName:        "",
-			fieldExtension: nil,
-			fmField:        nil,
-		},
-	}
+func (r *checkInMessageVO) invalid() bool {
+	return r == nil || r.FieldMaskOption == nil || r.FieldMaskField == nil
 }
 
 const (
@@ -41,7 +26,7 @@ func (m *FieldMaskModule) checkInMessage(message pgs.Message) (r *checkInMessage
 		return nil
 	}
 
-	r = newCheckInMessageVO()
+	r = new(checkInMessageVO)
 	fields := message.Fields()
 	for i := 0; i < len(fields); i++ {
 		f := fields[i]
@@ -64,10 +49,8 @@ func (m *FieldMaskModule) checkInMessage(message pgs.Message) (r *checkInMessage
 		}
 
 		m.Debugf("message (%s) hit", m.Name())
-		r.ok = true
-		r.fieldMask.varName = f.Name().String()
-		r.fieldMask.fieldExtension = opt
-		r.fieldMask.fmField = f
+		r.FieldMaskOption = opt
+		r.FieldMaskField = f
 
 		return r
 	}

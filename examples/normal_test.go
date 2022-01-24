@@ -16,8 +16,8 @@ func Test_FieldMask_Filter(t *testing.T) {
 		FieldMask: nil,
 	}
 
-	req.Mask_Email()
-	req.Mask_Name()
+	req.MaskOut_Email()
+	req.MaskOut_Name()
 	assert.Equal(t, 2, len(req.FieldMask.GetPaths()))
 
 	byts, err := protojson.Marshal(req)
@@ -55,8 +55,8 @@ func Test_FieldMask_Prune(t *testing.T) {
 		FieldMask: nil,
 	}
 
-	req.Mask_Email()
-	req.Mask_Name()
+	req.MaskOut_Email()
+	req.MaskOut_Name()
 	assert.Equal(t, 2, len(req.FieldMask.GetPaths()))
 
 	byts, err := protojson.Marshal(req)

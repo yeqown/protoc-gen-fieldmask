@@ -59,7 +59,7 @@ func (m *FieldMaskModule) Execute(targets map[string]pgs.File, packages map[stri
 	for _, f := range targets {
 		m.Push(f.Name().String()).Debug("fieldmask")
 
-		shouldGen := false
+		shouldGen := false // shouldGen indicates whether the file should be generated with '*.fm.go'.
 		fileMessagesMapping := make(map[string]pgs.Message)
 		paris := make([]fmMessagePair, 0, 2)
 		for _, message := range f.AllMessages() {
@@ -68,20 +68,18 @@ func (m *FieldMaskModule) Execute(targets map[string]pgs.File, packages map[stri
 			// DONE(@yeqown): check message contains a field google.protobuf.FieldMask and
 			// specify the fieldmask.option.Option as field option.
 			r := m.checkInMessage(message)
-			if r == nil || !r.ok || r.fieldMask.fieldExtension == nil {
+			if r.invalid() {
 				continue
 			}
 
-			shouldGen = shouldGen || r.ok
-			m.Debugf("message %s has fieldmask field %s", message.Name(), r.fieldMask.varName)
-
+			m.Debugf("message %s has fieldmask field %s", message.Name(), r.FieldMaskField.Name())
 			paris = append(paris, fmMessagePair{
 				checkInMessageVO: r,
-				FieldMaskField:   r.fieldMask.fmField,
 				InMessage:        message,
 				OutMessage:       nil,
 			})
 
+			shouldGen = true
 		}
 
 		outCtx := &outFieldMaskContext{
@@ -95,7 +93,8 @@ func (m *FieldMaskModule) Execute(targets map[string]pgs.File, packages map[stri
 			for idx, pair := range paris {
 				ok := false
 				if pair.OutMessage == nil {
-					paris[idx].OutMessage, ok = fileMessagesMapping[pair.checkInMessageVO.fieldMask.fieldExtension.GetMessage()]
+					outMessageName := pair.checkInMessageVO.FieldMaskOption.GetOut().GetMessage()
+					paris[idx].OutMessage, ok = fileMessagesMapping[outMessageName]
 					if !ok {
 						continue
 					}

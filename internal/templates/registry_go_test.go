@@ -25,7 +25,7 @@ func (t *testGoTemplateRegistrySuite) SetupSuite() {
 	var err error
 	_, err = tpl.ParseFiles("./go/file.tpl")
 	t.Require().NoError(err)
-	_, err = tpl.New("message").ParseFiles("./go/message.tpl")
+	_, err = tpl.New("message").ParseFiles("./go/fm.in.tpl")
 	t.Require().NoError(err)
 	t.tpl = tpl
 }

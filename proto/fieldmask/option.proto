@@ -25,8 +25,8 @@ extend google.protobuf.FieldOptions {
 
 // FieldMask rules applied at the field level
 message FieldMask {
-  // message indicates the Message type that was used to apply FieldMask rules.
-  string message = 1;
+  InMessageOption in = 1;
+  OutMessageOption out = 2;
 }
 
 enum MaskMode {
@@ -35,4 +35,24 @@ enum MaskMode {
 
   // FiledMaskMode_Prune indicates that the field in fieldmask should be removed.
   Prune = 1;
+}
+
+// FieldMaskMode indicates the options help generate the field mask extension
+// for in message.
+message InMessageOption {
+  // gen indicates the Message type that was used to apply FieldMask rules. If gen is
+  // set, the fieldmask plugin will generates `MaskIn_FieldName` and `MaskIn_FieldName`
+  // for in message.
+  bool gen = 1;
+}
+
+// OutMessageOption indicates the options help generating the field mask extension
+// for out message.
+message OutMessageOption {
+  // gen indicates the Message type that was used to apply FieldMask rules, if gen is
+  // set, the fieldmask plugin will generates `$outMessage_FieldMask` helper object
+  // to help deal with $outMessage with $inMessage.FieldMask.
+  bool gen = 1;
+  // message indicates the Message type that was used to apply FieldMask rules.
+  string message = 2;
 }

@@ -10,5 +10,17 @@ import (
     fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
-{{ range .FieldMaskPairs }}{{ template "message.tpl" . }}
+{{ range $idx, $pair := .FieldMaskPairs }}
+    {{ template "message.in" . }}
+    {{ if or (eq $pair.FieldMaskOption.In.Gen true) (eq $pair.FieldMaskOption.Out.Gen true) }}
+        {{ template "fm" . }}
+    {{ end }}
+
+    {{ if eq $pair.FieldMaskOption.In.Gen true }}
+        {{ template "fm.in" . }}
+    {{ end }}
+
+    {{ if eq $pair.FieldMaskOption.Out.Gen true }}
+        {{ template "fm.out" . }}
+    {{ end }}
 {{ end }}

@@ -18,7 +18,7 @@ deal with `FieldMask` message.
 - [x] generates `Mask_$field` to `in` message type which declare in `in.FieldMask` option.
 - [x] generate `FieldMask_Filter` and `FieldMask_Prune` to `in` message, quickly apply field mask.  
 - [x] generates `Masked_$field` to `$out_FieldMask` support quickly judge field masking. 
-- [ ] support mask `in` fields in `incremental updating` case.
+- [x] support mask `in` fields in `incremental updating` case.
 
 ### Installation
 
@@ -48,9 +48,15 @@ import "google/protobuf/field_mask.proto";
 
 message UserInfoRequest {
   string user_id = 1;
-  google.protobuf.FieldMask field_mask = 2 [fieldmask.option.Option = {message: "UserInfoResponse"}];
-  // later version would think about following option, to support more usecase in developing.
-  // google.protobuf.FieldMask field_mask = 2 [fieldmask.option.Option = {in: {gen: true}, out: {gen: true, message: "UserInfoResponse"} }];
+  google.protobuf.FieldMask field_mask = 2 [
+    // generate MaskIn_XXX and MaskedIn_XXX, xxx are fields in in message (UserInfoRequest). 
+    (fieldmask.option.Option).in = {gen: true},
+    // generate MaskOut_XXX and MaskedOut_XXX, xxx are fields in out message (UserInfoResponse).
+    // Notice that: 
+    // 1. you must set message to out message name, and in and out message should in a same proto file.
+    // 2. if out message is not specified, it will not generated correctly. 
+    (fieldmask.option.Option).out = {gen: true, message:"UserInfoResponse"}
+  ];
 }
 
 message Address {
@@ -92,8 +98,8 @@ func main() {
   }
   
   // enable field mask on specific fields.
-  req.Mask_Email()
-  req.Mask_Name()
+  req.MaskOut_Email()
+  req.MaskOut_Name()
   
   
   filter := req.FieldMask_Filter()
@@ -126,8 +132,8 @@ func main() {
   }
   
   // enable field mask on specific fields.
-  req.Mask_Email()
-  req.Mask_Name()
+  req.MaskOut_Email()
+  req.MaskOut_Name()
   
   filter := req.FieldMask_Filter()
   resp := new(normal.UserInfoResponse)
