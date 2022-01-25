@@ -11,4 +11,7 @@ quickly get started with the examples by running:
 make gen-normal && go test . -run='^Test_FieldMask_.*$' -count=1 -v 
 ```
 
+### Samples
 
+- [Masking gRPC response fields](./examples/grpc-masked-response/README.md)
+- [Incremental updating](./examples/grpc-increase-update/README.md) 

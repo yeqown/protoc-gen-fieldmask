@@ -26,7 +26,12 @@ deal with `FieldMask` message.
 go install github.com/yeqwown/protoc-gen-fieldmask@latest
 ```
 
-### Get Started
+### Examples
+
+- [Masking gRPC response fields](./examples/grpc-masked-response/README.md)
+- [Incremental updating](examples/grpc-incremental-update/README.md) 
+
+### Usage guide
 
 ```sh
 protoc \
@@ -39,7 +44,7 @@ protoc \
 
 ### Generated Preview
 
-1. coding proto file [user.proto](./examples/normal/user.proto)：
+1. coding proto file [user.proto](./examples/pb/user.proto)：
 
 ```protobuf
 syntax = "proto3";
@@ -75,16 +80,16 @@ message UserInfoResponse {
 2. generated [user.pb.go](./examples/normal/user.pb.go), [user.pb.fm.go](./examples/normal/user.pb.fm.go)：
 
 ```sh
-cd examples && make gen-normal
+cd examples && make gen-pb
 
 # or generate them manually
 cd examples
 protoc \
-        -I./normal \
+        -I./pb \
         -I../proto \
-        --go_out=paths=source_relative:./normal \
-        --fieldmask_out=paths=source_relative,lang=go:./normal \
-        ./normal/user.proto
+        --go_out=paths=source_relative:./pb \
+        --fieldmask_out=paths=source_relative,lang=go:./pb \
+        ./pb/user.proto
 ```
 
 3. sample usage codes, on the one hand, to minimize changes to existing code, 

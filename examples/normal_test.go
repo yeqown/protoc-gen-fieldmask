@@ -3,11 +3,11 @@ package examples
 import (
 	"testing"
 
-	"examples/normal"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
+
+	normal "examples/pb"
 )
 
 func Test_FieldMask_Filter(t *testing.T) {
