@@ -1,13 +1,13 @@
 # [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.2.0...v) (2022-01-25)
 
 
+
+# [0.2.0](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.1.0...v0.2.0) (2022-01-25)
+
+
 ### Bug Fixes
 
 * **example/pb:** reformat generated *.fm.go ([d05fc48](https://github.com/yeqown/protoc-gen-fieldmask/commit/d05fc48b642041679585e2ad3876e23421550b2f))
-
-
-
-# [0.2.0](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.1.0...v0.2.0) (2022-01-25)
 
 
 
