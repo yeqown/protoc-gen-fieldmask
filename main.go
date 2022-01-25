@@ -1,6 +1,8 @@
 package main
 
 import (
+	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+
 	"github.com/yeqown/protoc-gen-fieldmask/internal/module"
 
 	pgs "github.com/lyft/protoc-gen-star"
@@ -13,7 +15,7 @@ func main() {
 	pgs.Init(pgs.DebugEnv("DEBUG_PGFM"), pgs.SupportedFeatures(&optional)).
 		RegisterModule(module.FieldMask(tplRegistryFactory)).
 		RegisterPostProcessor(
-		//pgsgo.GoFmt(),
+			pgsgo.GoFmt(),
 		).
 		Render()
 }
