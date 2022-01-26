@@ -16,8 +16,8 @@ gen-fm-pb:
 prepare-debug:
 	- mkdir internal/module/debugdata
 	protoc \
-		-I=./examples/normal \
+		-I=./examples/pb \
 		-I=./proto \
 		 --plugin=protoc-gen-debug=${debug_path} \
 		--debug_out="./internal/module/debugdata:." \
-		./examples/normal/user.proto
+		./examples/pb/user.proto

@@ -11,7 +11,6 @@ import (
 )
 
 {{ range $idx, $pair := .FieldMaskPairs }}
-    {{ template "message.in" . }}
     {{ if or (eq $pair.FieldMaskOption.In.Gen true) (eq $pair.FieldMaskOption.Out.Gen true) }}
         {{ template "fm" . }}
     {{ end }}

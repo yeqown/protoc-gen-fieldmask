@@ -2,6 +2,9 @@
 {{ $outMessageName := .OutMessage.Name }}
 {{ $fmField := .FieldMaskField }}
 
+// _fm_{{ $inMessageName }} is built in variable for {{ $inMessageName }} to call FieldMask.Append
+var _fm_{{ $inMessageName }} = new({{ $inMessageName }})
+
 {{ range $idx, $f := .InMessage.Fields }}
     {{ if eq $f.Name.UpperCamelCase $fmField.Name.UpperCamelCase }}
     {{ else }}
@@ -11,7 +14,7 @@
               if x.{{ $fmField.Name.UpperCamelCase}} == nil {
                   x.{{ $fmField.Name.UpperCamelCase }} = new(fieldmaskpb.FieldMask)
               }
-              x.{{ $fmField.Name.UpperCamelCase}}.Append(new({{ $inMessageName }}), "{{ $f.Name }}")
+              x.{{ $fmField.Name.UpperCamelCase}}.Append(_fm_{{ $inMessageName }}, "{{ $f.Name }}")
 
               return x
         }

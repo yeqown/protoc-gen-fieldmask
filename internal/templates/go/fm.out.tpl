@@ -2,17 +2,33 @@
 {{ $outMessageName := .OutMessage.Name }}
 {{ $fmField := .FieldMaskField }}
 
-{{ range $idx, $f := .OutMessage.Fields }}
-    // Masked_{{ $f.Name.UpperCamelCase }} indicates the field {{ $inMessageName }}.{{ $f.Name.UpperCamelCase }}
-    // exists in the {{ $inMessageName }}.{{ $fmField.Name.UpperCamelCase }} or not.
-    func (x *{{ $inMessageName }}_FieldMask) MaskedOut_{{ $f.Name.UpperCamelCase }}() bool {
-          if x.maskMapping == nil {
-              return false
-          }
+// _fm_{{ $outMessageName }} is built in variable for {{ $outMessageName }} to call FieldMask.Append
+var _fm_{{ $outMessageName }} = new({{ $outMessageName }})
 
-          _, ok := x.maskMapping["{{ $f.Name }}"]
-          return ok
-    }
+{{ range $idx, $f := .OutMessage.Fields }}
+// MaskOut_{{ $f.Name.UpperCamelCase }} indicates append {{ $outMessageName }}.{{ $f.Name.UpperCamelCase }} into
+// {{ $inMessageName }}.{{ $fmField.Name.UpperCamelCase }}.
+func (x *{{ $inMessageName }}) MaskOut_{{ $f.Name.UpperCamelCase }}() *{{ $inMessageName }} {
+      if x.{{ $fmField.Name.UpperCamelCase}} == nil {
+          x.{{ $fmField.Name.UpperCamelCase }} = new(fieldmaskpb.FieldMask)
+      }
+      x.{{ $fmField.Name.UpperCamelCase}}.Append(_fm_{{ $outMessageName }}, "{{ $f.Name }}")
+
+      return x
+}
+{{ end}}
+
+{{ range $idx, $f := .OutMessage.Fields }}
+// Masked_{{ $f.Name.UpperCamelCase }} indicates the field {{ $inMessageName }}.{{ $f.Name.UpperCamelCase }}
+// exists in the {{ $inMessageName }}.{{ $fmField.Name.UpperCamelCase }} or not.
+func (x *{{ $inMessageName }}_FieldMask) MaskedOut_{{ $f.Name.UpperCamelCase }}() bool {
+      if x.maskMapping == nil {
+          return false
+      }
+
+      _, ok := x.maskMapping["{{ $f.Name }}"]
+      return ok
+}
 {{ end }}
 
 // Mask only affects the fields in the {{ $inMessageName }}.
@@ -25,42 +41,4 @@ func (x *{{ $inMessageName }}_FieldMask) Mask(m *{{ $outMessageName }}) *{{ $out
    }
 
    return m
-}
-
-// filter will retain the fields those are in the maskMapping
-func (x *{{ $inMessageName }}_FieldMask) filter(m proto.Message) {
-    if len(x.maskMapping) == 0 {
-        return
-    }
-
-    pr := m.ProtoReflect()
-    pr.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
-        _, ok := x.maskMapping[string(fd.Name())]
-        if !ok {
-            pr.Clear(fd)
-            return true
-        }
-
-        // TODO(@yeqown): support deeper fields masking
-        return true
-    })
-}
-
-// prune will remove fields those are in the maskMapping
-func (x *{{ $inMessageName }}_FieldMask) prune(m proto.Message) {
-    if len(x.maskMapping) == 0 {
-        return
-    }
-
-    pr := m.ProtoReflect()
-    pr.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
-        _, ok := x.maskMapping[string(fd.Name())]
-        if !ok {
-            return true
-        }
-
-        // TODO(@yeqown): support deeper fields masking
-        pr.Clear(fd)
-        return true
-    })
 }

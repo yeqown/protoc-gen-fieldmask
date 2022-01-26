@@ -1,11 +1,10 @@
 package main
 
 import (
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
-
 	"github.com/yeqown/protoc-gen-fieldmask/internal/module"
 
 	pgs "github.com/lyft/protoc-gen-star"
+	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	"google.golang.org/protobuf/types/pluginpb"
 )
 

@@ -21,14 +21,12 @@ func tplRegistryFactory(ctx pgsgo.Context) *templates.Registry {
 var (
 	//go:embed internal/templates/go/file.tpl
 	_tplFileGO []byte
-	//go:embed internal/templates/go/message.in.tpl
-	_tplMessageFmInGO []byte
 	//go:embed internal/templates/go/fm.tpl
-	_tplFieldMaskInGO []byte
+	_tplFieldMaskGO []byte
 	//go:embed internal/templates/go/fm.in.tpl
-	_tplMessageInGO []byte
+	_tplFieldMaskInGO []byte
 	//go:embed internal/templates/go/fm.out.tpl
-	_tplMessageFmOutGO []byte
+	_tplFieldMaskOutGO []byte
 )
 
 func makeTemplatesForGo(ctx pgsgo.Context) *template.Template {
@@ -36,10 +34,9 @@ func makeTemplatesForGo(ctx pgsgo.Context) *template.Template {
 
 	shared.RegisterFunctions(tpl, ctx)
 	template.Must(tpl.Parse(string(_tplFileGO)))
-	template.Must(tpl.New("message.in").Parse(string(_tplMessageInGO)))
-	template.Must(tpl.New("fm").Parse(string(_tplFieldMaskInGO)))
-	template.Must(tpl.New("fm.in").Parse(string(_tplMessageFmInGO)))
-	template.Must(tpl.New("fm.out").Parse(string(_tplMessageFmOutGO)))
+	template.Must(tpl.New("fm").Parse(string(_tplFieldMaskGO)))
+	template.Must(tpl.New("fm.in").Parse(string(_tplFieldMaskInGO)))
+	template.Must(tpl.New("fm.out").Parse(string(_tplFieldMaskOutGO)))
 
 	return tpl
 }

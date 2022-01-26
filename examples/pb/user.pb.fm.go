@@ -10,28 +10,6 @@ import (
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
-// MaskIn_UserId indicates append UserInfoResponse.UserId into
-// UserInfoRequest.FieldMask.
-func (x *UserInfoRequest) MaskIn_UserId() *UserInfoRequest {
-	if x.FieldMask == nil {
-		x.FieldMask = new(fieldmaskpb.FieldMask)
-	}
-	x.FieldMask.Append(new(UserInfoRequest), "user_id")
-
-	return x
-}
-
-// Masked_UserId indicates the field UserInfoRequest.UserId
-// exists in the UserInfoRequest.FieldMask or not.
-func (x *UserInfoRequest_FieldMask) MaskedIn_UserId() bool {
-	if x.maskMapping == nil {
-		return false
-	}
-
-	_, ok := x.maskMapping["user_id"]
-	return ok
-}
-
 func (x *UserInfoRequest) FieldMaskWithMode(mode pbfieldmask.MaskMode) *UserInfoRequest_FieldMask {
 	fm := &UserInfoRequest_FieldMask{
 		maskMode:    mode,
@@ -65,13 +43,79 @@ type UserInfoRequest_FieldMask struct {
 	maskMapping map[string]struct{}
 }
 
+// filter will retain the fields those are in the maskMapping
+func (x *UserInfoRequest_FieldMask) filter(m proto.Message) {
+	if len(x.maskMapping) == 0 {
+		return
+	}
+
+	pr := m.ProtoReflect()
+	pr.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
+		_, ok := x.maskMapping[string(fd.Name())]
+		if !ok {
+			pr.Clear(fd)
+			return true
+		}
+
+		// TODO(@yeqown): support deeper fields masking
+		return true
+	})
+}
+
+// prune will remove fields those are in the maskMapping
+func (x *UserInfoRequest_FieldMask) prune(m proto.Message) {
+	if len(x.maskMapping) == 0 {
+		return
+	}
+
+	pr := m.ProtoReflect()
+	pr.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
+		_, ok := x.maskMapping[string(fd.Name())]
+		if !ok {
+			return true
+		}
+
+		// TODO(@yeqown): support deeper fields masking
+		pr.Clear(fd)
+		return true
+	})
+}
+
+// _fm_UserInfoRequest is built in variable for UserInfoRequest to call FieldMask.Append
+var _fm_UserInfoRequest = new(UserInfoRequest)
+
+// MaskIn_UserId indicates append UserInfoResponse.UserId into
+// UserInfoRequest.FieldMask.
+func (x *UserInfoRequest) MaskIn_UserId() *UserInfoRequest {
+	if x.FieldMask == nil {
+		x.FieldMask = new(fieldmaskpb.FieldMask)
+	}
+	x.FieldMask.Append(_fm_UserInfoRequest, "user_id")
+
+	return x
+}
+
+// Masked_UserId indicates the field UserInfoRequest.UserId
+// exists in the UserInfoRequest.FieldMask or not.
+func (x *UserInfoRequest_FieldMask) MaskedIn_UserId() bool {
+	if x.maskMapping == nil {
+		return false
+	}
+
+	_, ok := x.maskMapping["user_id"]
+	return ok
+}
+
+// _fm_UserInfoResponse is built in variable for UserInfoResponse to call FieldMask.Append
+var _fm_UserInfoResponse = new(UserInfoResponse)
+
 // MaskOut_UserId indicates append UserInfoResponse.UserId into
 // UserInfoRequest.FieldMask.
 func (x *UserInfoRequest) MaskOut_UserId() *UserInfoRequest {
 	if x.FieldMask == nil {
 		x.FieldMask = new(fieldmaskpb.FieldMask)
 	}
-	x.FieldMask.Append(new(UserInfoResponse), "user_id")
+	x.FieldMask.Append(_fm_UserInfoResponse, "user_id")
 
 	return x
 }
@@ -82,7 +126,7 @@ func (x *UserInfoRequest) MaskOut_Name() *UserInfoRequest {
 	if x.FieldMask == nil {
 		x.FieldMask = new(fieldmaskpb.FieldMask)
 	}
-	x.FieldMask.Append(new(UserInfoResponse), "name")
+	x.FieldMask.Append(_fm_UserInfoResponse, "name")
 
 	return x
 }
@@ -93,7 +137,7 @@ func (x *UserInfoRequest) MaskOut_Email() *UserInfoRequest {
 	if x.FieldMask == nil {
 		x.FieldMask = new(fieldmaskpb.FieldMask)
 	}
-	x.FieldMask.Append(new(UserInfoResponse), "email")
+	x.FieldMask.Append(_fm_UserInfoResponse, "email")
 
 	return x
 }
@@ -104,7 +148,7 @@ func (x *UserInfoRequest) MaskOut_Address() *UserInfoRequest {
 	if x.FieldMask == nil {
 		x.FieldMask = new(fieldmaskpb.FieldMask)
 	}
-	x.FieldMask.Append(new(UserInfoResponse), "address")
+	x.FieldMask.Append(_fm_UserInfoResponse, "address")
 
 	return x
 }
@@ -163,42 +207,4 @@ func (x *UserInfoRequest_FieldMask) Mask(m *UserInfoResponse) *UserInfoResponse 
 	}
 
 	return m
-}
-
-// filter will retain the fields those are in the maskMapping
-func (x *UserInfoRequest_FieldMask) filter(m proto.Message) {
-	if len(x.maskMapping) == 0 {
-		return
-	}
-
-	pr := m.ProtoReflect()
-	pr.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
-		_, ok := x.maskMapping[string(fd.Name())]
-		if !ok {
-			pr.Clear(fd)
-			return true
-		}
-
-		// TODO(@yeqown): support deeper fields masking
-		return true
-	})
-}
-
-// prune will remove fields those are in the maskMapping
-func (x *UserInfoRequest_FieldMask) prune(m proto.Message) {
-	if len(x.maskMapping) == 0 {
-		return
-	}
-
-	pr := m.ProtoReflect()
-	pr.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
-		_, ok := x.maskMapping[string(fd.Name())]
-		if !ok {
-			return true
-		}
-
-		// TODO(@yeqown): support deeper fields masking
-		pr.Clear(fd)
-		return true
-	})
 }
