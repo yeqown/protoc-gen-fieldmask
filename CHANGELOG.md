@@ -1,4 +1,19 @@
-# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.2.0...v) (2022-01-25)
+# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.0...v) (2022-01-26)
+
+
+
+# [0.3.0](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.2.0...v0.3.0) (2022-01-26)
+
+
+### Bug Fixes
+
+* **proto/util:** masked judge in util ([c64c76c](https://github.com/yeqown/protoc-gen-fieldmask/commit/c64c76cac418c750c4b4fed46dfb335fa306b81e))
+
+
+### Features
+
+* **template:** support mask recursive message type in message ([5170d19](https://github.com/yeqown/protoc-gen-fieldmask/commit/5170d19e289a6efefb7c6965a4abfd1e8779b5aa))
+* **templates:** optimise templates ([91edc7a](https://github.com/yeqown/protoc-gen-fieldmask/commit/91edc7a68fc9853b8c44e360a5cfc7958740eb24))
 
 
 
