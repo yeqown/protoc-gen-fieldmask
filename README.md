@@ -1,6 +1,6 @@
 # protoc-gen-fieldmask
 
-<img src="./assets/intro.jpg" width="100%"/>
+<img src="./assets/intro.svg" width="100%"/>
 
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/yeqown/protoc-gen-fieldmask)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/yeqown/protoc-gen-fieldmask)
