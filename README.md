@@ -1,5 +1,7 @@
 # protoc-gen-fieldmask
 
+<img src="./assets/intro.jpg" width="100%"/>
+
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/yeqown/protoc-gen-fieldmask)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/yeqown/protoc-gen-fieldmask)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
@@ -11,6 +13,15 @@ It looks like `grapgql` but only takes effect on the server inside calls.
 
 To help developer to avoid repeating codes to deal with `FieldMask` message, this plugin generates a set of utilities to 
 deal with `FieldMask` message.
+
+**1. Masking gRPC response case**
+
+<img src="./assets/fieldmask-case1.jpg" width="100%" align="center">
+<br />
+
+**2. Incremental update case**
+
+<img src="./assets/fieldmask-case2.jpg" width="100%" align="center">
 
 ### Features
 
