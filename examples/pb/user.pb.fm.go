@@ -5,19 +5,13 @@ package pb
 
 import (
 	pbfieldmask "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 func (x *UserInfoRequest) FieldMaskWithMode(mode pbfieldmask.MaskMode) *UserInfoRequest_FieldMask {
 	fm := &UserInfoRequest_FieldMask{
-		maskMode:    mode,
-		maskMapping: make(map[string]struct{}, len(x.FieldMask.GetPaths())),
-	}
-
-	for _, path := range x.FieldMask.GetPaths() {
-		fm.maskMapping[path] = struct{}{}
+		maskMode: mode,
+		mask:     pbfieldmask.New(x.FieldMask),
 	}
 
 	return fm
@@ -39,52 +33,14 @@ func (x *UserInfoRequest) FieldMask_Prune() *UserInfoRequest_FieldMask {
 
 // UserInfoRequest_FieldMask provide provide helper functions to deal with FieldMask.
 type UserInfoRequest_FieldMask struct {
-	maskMode    pbfieldmask.MaskMode
-	maskMapping map[string]struct{}
-}
-
-// filter will retain the fields those are in the maskMapping
-func (x *UserInfoRequest_FieldMask) filter(m proto.Message) {
-	if len(x.maskMapping) == 0 {
-		return
-	}
-
-	pr := m.ProtoReflect()
-	pr.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
-		_, ok := x.maskMapping[string(fd.Name())]
-		if !ok {
-			pr.Clear(fd)
-			return true
-		}
-
-		// TODO(@yeqown): support deeper fields masking
-		return true
-	})
-}
-
-// prune will remove fields those are in the maskMapping
-func (x *UserInfoRequest_FieldMask) prune(m proto.Message) {
-	if len(x.maskMapping) == 0 {
-		return
-	}
-
-	pr := m.ProtoReflect()
-	pr.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
-		_, ok := x.maskMapping[string(fd.Name())]
-		if !ok {
-			return true
-		}
-
-		// TODO(@yeqown): support deeper fields masking
-		pr.Clear(fd)
-		return true
-	})
+	maskMode pbfieldmask.MaskMode
+	mask     pbfieldmask.NestedFieldMask
 }
 
 // _fm_UserInfoRequest is built in variable for UserInfoRequest to call FieldMask.Append
 var _fm_UserInfoRequest = new(UserInfoRequest)
 
-// MaskIn_UserId indicates append UserInfoResponse.UserId into
+// MaskIn_UserId append UserInfoRequest.UserId into
 // UserInfoRequest.FieldMask.
 func (x *UserInfoRequest) MaskIn_UserId() *UserInfoRequest {
 	if x.FieldMask == nil {
@@ -95,21 +51,21 @@ func (x *UserInfoRequest) MaskIn_UserId() *UserInfoRequest {
 	return x
 }
 
-// Masked_UserId indicates the field UserInfoRequest.UserId
+// MaskedIn_UserId indicates the field UserInfoRequest.UserId
 // exists in the UserInfoRequest.FieldMask or not.
 func (x *UserInfoRequest_FieldMask) MaskedIn_UserId() bool {
-	if x.maskMapping == nil {
+	if x.mask == nil {
 		return false
 	}
 
-	_, ok := x.maskMapping["user_id"]
+	_, ok := x.mask["user_id"]
 	return ok
 }
 
 // _fm_UserInfoResponse is built in variable for UserInfoResponse to call FieldMask.Append
 var _fm_UserInfoResponse = new(UserInfoResponse)
 
-// MaskOut_UserId indicates append UserInfoResponse.UserId into
+// MaskOut_UserId append UserInfoResponse.UserId into
 // UserInfoRequest.FieldMask.
 func (x *UserInfoRequest) MaskOut_UserId() *UserInfoRequest {
 	if x.FieldMask == nil {
@@ -120,7 +76,18 @@ func (x *UserInfoRequest) MaskOut_UserId() *UserInfoRequest {
 	return x
 }
 
-// MaskOut_Name indicates append UserInfoResponse.Name into
+// MaskedOut_UserId indicates the field UserInfoRequest.UserId
+// exists in the UserInfoRequest.FieldMask or not.
+func (x *UserInfoRequest_FieldMask) MaskedOut_UserId() bool {
+	if x.mask == nil {
+		return false
+	}
+
+	_, ok := x.mask["user_id"]
+	return ok
+}
+
+// MaskOut_Name append UserInfoResponse.Name into
 // UserInfoRequest.FieldMask.
 func (x *UserInfoRequest) MaskOut_Name() *UserInfoRequest {
 	if x.FieldMask == nil {
@@ -131,7 +98,18 @@ func (x *UserInfoRequest) MaskOut_Name() *UserInfoRequest {
 	return x
 }
 
-// MaskOut_Email indicates append UserInfoResponse.Email into
+// MaskedOut_Name indicates the field UserInfoRequest.Name
+// exists in the UserInfoRequest.FieldMask or not.
+func (x *UserInfoRequest_FieldMask) MaskedOut_Name() bool {
+	if x.mask == nil {
+		return false
+	}
+
+	_, ok := x.mask["name"]
+	return ok
+}
+
+// MaskOut_Email append UserInfoResponse.Email into
 // UserInfoRequest.FieldMask.
 func (x *UserInfoRequest) MaskOut_Email() *UserInfoRequest {
 	if x.FieldMask == nil {
@@ -142,7 +120,18 @@ func (x *UserInfoRequest) MaskOut_Email() *UserInfoRequest {
 	return x
 }
 
-// MaskOut_Address indicates append UserInfoResponse.Address into
+// MaskedOut_Email indicates the field UserInfoRequest.Email
+// exists in the UserInfoRequest.FieldMask or not.
+func (x *UserInfoRequest_FieldMask) MaskedOut_Email() bool {
+	if x.mask == nil {
+		return false
+	}
+
+	_, ok := x.mask["email"]
+	return ok
+}
+
+// MaskOut_Address append UserInfoResponse.Address into
 // UserInfoRequest.FieldMask.
 func (x *UserInfoRequest) MaskOut_Address() *UserInfoRequest {
 	if x.FieldMask == nil {
@@ -153,47 +142,58 @@ func (x *UserInfoRequest) MaskOut_Address() *UserInfoRequest {
 	return x
 }
 
-// Masked_UserId indicates the field UserInfoRequest.UserId
-// exists in the UserInfoRequest.FieldMask or not.
-func (x *UserInfoRequest_FieldMask) MaskedOut_UserId() bool {
-	if x.maskMapping == nil {
-		return false
-	}
-
-	_, ok := x.maskMapping["user_id"]
-	return ok
-}
-
-// Masked_Name indicates the field UserInfoRequest.Name
-// exists in the UserInfoRequest.FieldMask or not.
-func (x *UserInfoRequest_FieldMask) MaskedOut_Name() bool {
-	if x.maskMapping == nil {
-		return false
-	}
-
-	_, ok := x.maskMapping["name"]
-	return ok
-}
-
-// Masked_Email indicates the field UserInfoRequest.Email
-// exists in the UserInfoRequest.FieldMask or not.
-func (x *UserInfoRequest_FieldMask) MaskedOut_Email() bool {
-	if x.maskMapping == nil {
-		return false
-	}
-
-	_, ok := x.maskMapping["email"]
-	return ok
-}
-
-// Masked_Address indicates the field UserInfoRequest.Address
+// MaskedOut_Address indicates the field UserInfoRequest.Address
 // exists in the UserInfoRequest.FieldMask or not.
 func (x *UserInfoRequest_FieldMask) MaskedOut_Address() bool {
-	if x.maskMapping == nil {
+	if x.mask == nil {
 		return false
 	}
 
-	_, ok := x.maskMapping["address"]
+	_, ok := x.mask["address"]
+	return ok
+}
+
+// MaskOut_Address_Country append UserInfoResponse.Country into
+// UserInfoRequest.FieldMask.
+func (x *UserInfoRequest) MaskOut_Address_Country() *UserInfoRequest {
+	if x.FieldMask == nil {
+		x.FieldMask = new(fieldmaskpb.FieldMask)
+	}
+	x.FieldMask.Append(_fm_UserInfoResponse, "address.country")
+
+	return x
+}
+
+// MaskedOut_Address_Country indicates the field UserInfoRequest.Country
+// exists in the UserInfoRequest.FieldMask or not.
+func (x *UserInfoRequest_FieldMask) MaskedOut_Address_Country() bool {
+	if x.mask == nil {
+		return false
+	}
+
+	_, ok := x.mask["address.country"]
+	return ok
+}
+
+// MaskOut_Address_Province append UserInfoResponse.Province into
+// UserInfoRequest.FieldMask.
+func (x *UserInfoRequest) MaskOut_Address_Province() *UserInfoRequest {
+	if x.FieldMask == nil {
+		x.FieldMask = new(fieldmaskpb.FieldMask)
+	}
+	x.FieldMask.Append(_fm_UserInfoResponse, "address.province")
+
+	return x
+}
+
+// MaskedOut_Address_Province indicates the field UserInfoRequest.Province
+// exists in the UserInfoRequest.FieldMask or not.
+func (x *UserInfoRequest_FieldMask) MaskedOut_Address_Province() bool {
+	if x.mask == nil {
+		return false
+	}
+
+	_, ok := x.mask["address.province"]
 	return ok
 }
 
@@ -201,9 +201,9 @@ func (x *UserInfoRequest_FieldMask) MaskedOut_Address() bool {
 func (x *UserInfoRequest_FieldMask) Mask(m *UserInfoResponse) *UserInfoResponse {
 	switch x.maskMode {
 	case pbfieldmask.MaskMode_Filter:
-		x.filter(m)
+		x.mask.Filter(m)
 	case pbfieldmask.MaskMode_Prune:
-		x.prune(m)
+		x.mask.Prune(m)
 	}
 
 	return m

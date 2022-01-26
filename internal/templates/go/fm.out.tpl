@@ -1,43 +1,21 @@
 {{ $inMessageName := .InMessage.Name }}
 {{ $outMessageName := .OutMessage.Name }}
-{{ $fmField := .FieldMaskField }}
+{{ $fmFieldName := .FieldMaskField.Name.UpperCamelCase }}
 
-// _fm_{{ $outMessageName }} is built in variable for {{ $outMessageName }} to call FieldMask.Append
-var _fm_{{ $outMessageName }} = new({{ $outMessageName }})
+{{ $messageName := .OutMessage.Name.UpperCamelCase }}
 
-{{ range $idx, $f := .OutMessage.Fields }}
-// MaskOut_{{ $f.Name.UpperCamelCase }} indicates append {{ $outMessageName }}.{{ $f.Name.UpperCamelCase }} into
-// {{ $inMessageName }}.{{ $fmField.Name.UpperCamelCase }}.
-func (x *{{ $inMessageName }}) MaskOut_{{ $f.Name.UpperCamelCase }}() *{{ $inMessageName }} {
-      if x.{{ $fmField.Name.UpperCamelCase}} == nil {
-          x.{{ $fmField.Name.UpperCamelCase }} = new(fieldmaskpb.FieldMask)
-      }
-      x.{{ $fmField.Name.UpperCamelCase}}.Append(_fm_{{ $outMessageName }}, "{{ $f.Name }}")
+// _fm_{{ $messageName }} is built in variable for {{ $messageName }} to call FieldMask.Append
+var _fm_{{ $messageName }} = new({{ $messageName }})
 
-      return x
-}
-{{ end}}
-
-{{ range $idx, $f := .OutMessage.Fields }}
-// Masked_{{ $f.Name.UpperCamelCase }} indicates the field {{ $inMessageName }}.{{ $f.Name.UpperCamelCase }}
-// exists in the {{ $inMessageName }}.{{ $fmField.Name.UpperCamelCase }} or not.
-func (x *{{ $inMessageName }}_FieldMask) MaskedOut_{{ $f.Name.UpperCamelCase }}() bool {
-      if x.maskMapping == nil {
-          return false
-      }
-
-      _, ok := x.maskMapping["{{ $f.Name }}"]
-      return ok
-}
-{{ end }}
+{{ template "message" dict "Message" .OutMessage "inMessageName" $inMessageName "fmFieldName" $fmFieldName "inOut" "Out" "suffix" "" "pathSuffix" "" "messageName" $messageName }}
 
 // Mask only affects the fields in the {{ $inMessageName }}.
 func (x *{{ $inMessageName }}_FieldMask) Mask(m *{{ $outMessageName }}) *{{ $outMessageName }} {
    switch x.maskMode {
    case pbfieldmask.MaskMode_Filter:
-        x.filter(m)
+        x.mask.Filter(m)
    case pbfieldmask.MaskMode_Prune:
-        x.prune(m)
+        x.mask.Prune(m)
    }
 
    return m

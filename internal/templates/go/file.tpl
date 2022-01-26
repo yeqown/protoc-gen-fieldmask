@@ -5,8 +5,6 @@ package {{ pkg .File }}
 
 import (
     pbfieldmask "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask"
-    "google.golang.org/protobuf/proto"
-    "google.golang.org/protobuf/reflect/protoreflect"
     fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 

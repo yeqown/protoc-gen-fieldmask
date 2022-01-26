@@ -21,6 +21,8 @@ func tplRegistryFactory(ctx pgsgo.Context) *templates.Registry {
 var (
 	//go:embed internal/templates/go/file.tpl
 	_tplFileGO []byte
+	//go:embed internal/templates/go/message.tpl
+	_tplMessageGO []byte
 	//go:embed internal/templates/go/fm.tpl
 	_tplFieldMaskGO []byte
 	//go:embed internal/templates/go/fm.in.tpl
@@ -34,6 +36,7 @@ func makeTemplatesForGo(ctx pgsgo.Context) *template.Template {
 
 	shared.RegisterFunctions(tpl, ctx)
 	template.Must(tpl.Parse(string(_tplFileGO)))
+	template.Must(tpl.New("message").Parse(string(_tplMessageGO)))
 	template.Must(tpl.New("fm").Parse(string(_tplFieldMaskGO)))
 	template.Must(tpl.New("fm.in").Parse(string(_tplFieldMaskInGO)))
 	template.Must(tpl.New("fm.out").Parse(string(_tplFieldMaskOutGO)))
