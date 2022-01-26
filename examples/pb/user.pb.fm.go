@@ -58,8 +58,7 @@ func (x *UserInfoRequest_FieldMask) MaskedIn_UserId() bool {
 		return false
 	}
 
-	_, ok := x.mask["user_id"]
-	return ok
+	return x.mask.Masked("user_id")
 }
 
 // _fm_UserInfoResponse is built in variable for UserInfoResponse to call FieldMask.Append
@@ -83,8 +82,7 @@ func (x *UserInfoRequest_FieldMask) MaskedOut_UserId() bool {
 		return false
 	}
 
-	_, ok := x.mask["user_id"]
-	return ok
+	return x.mask.Masked("user_id")
 }
 
 // MaskOut_Name append UserInfoResponse.Name into
@@ -105,8 +103,7 @@ func (x *UserInfoRequest_FieldMask) MaskedOut_Name() bool {
 		return false
 	}
 
-	_, ok := x.mask["name"]
-	return ok
+	return x.mask.Masked("name")
 }
 
 // MaskOut_Email append UserInfoResponse.Email into
@@ -127,8 +124,7 @@ func (x *UserInfoRequest_FieldMask) MaskedOut_Email() bool {
 		return false
 	}
 
-	_, ok := x.mask["email"]
-	return ok
+	return x.mask.Masked("email")
 }
 
 // MaskOut_Address append UserInfoResponse.Address into
@@ -149,8 +145,7 @@ func (x *UserInfoRequest_FieldMask) MaskedOut_Address() bool {
 		return false
 	}
 
-	_, ok := x.mask["address"]
-	return ok
+	return x.mask.Masked("address")
 }
 
 // MaskOut_Address_Country append UserInfoResponse.Country into
@@ -171,8 +166,7 @@ func (x *UserInfoRequest_FieldMask) MaskedOut_Address_Country() bool {
 		return false
 	}
 
-	_, ok := x.mask["address.country"]
-	return ok
+	return x.mask.Masked("address.country")
 }
 
 // MaskOut_Address_Province append UserInfoResponse.Province into
@@ -193,8 +187,7 @@ func (x *UserInfoRequest_FieldMask) MaskedOut_Address_Province() bool {
 		return false
 	}
 
-	_, ok := x.mask["address.province"]
-	return ok
+	return x.mask.Masked("address.province")
 }
 
 // Mask only affects the fields in the UserInfoRequest.

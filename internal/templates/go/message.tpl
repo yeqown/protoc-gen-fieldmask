@@ -32,8 +32,7 @@
                   return false
               }
 
-              _, ok := x.mask["{{ $fieldPathKey }}"]
-              return ok
+              return x.mask.Masked("{{ $fieldPathKey }}")
         }
 
         {{ $recursive := (isMessage $f) }}

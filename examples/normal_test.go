@@ -163,3 +163,24 @@ func Test_FieldMask_Prune(t *testing.T) {
 	require.NoError(t, err2)
 	t.Logf("resp: %s", byts2)
 }
+
+func Test_FieldMask_Masked(t *testing.T) {
+	req := &normal.UserInfoRequest{
+		UserId:    "123123",
+		FieldMask: nil,
+	}
+
+	req.MaskOut_Email()
+	req.MaskOut_Address_Country()
+	assert.Equal(t, 2, len(req.FieldMask.GetPaths()))
+
+	filter := req.FieldMask_Filter()
+	assert.True(t, filter.MaskedOut_Address())
+	assert.True(t, filter.MaskedOut_Address_Country())
+	assert.True(t, filter.MaskedOut_Email())
+
+	assert.False(t, filter.MaskedIn_UserId())
+	assert.False(t, filter.MaskedOut_Name())
+	assert.False(t, filter.MaskedOut_UserId())
+	assert.False(t, filter.MaskedOut_Address_Province())
+}

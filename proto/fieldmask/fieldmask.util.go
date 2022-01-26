@@ -108,3 +108,16 @@ func (mask NestedFieldMask) Prune(m proto.Message) {
 		return true
 	})
 }
+
+func (mask NestedFieldMask) Masked(path string) bool {
+	arr := strings.Split(path, ".")
+	cur := mask
+	for _, p := range arr {
+		if _, ok := cur[p]; !ok {
+			return false
+		}
+		cur = cur[p]
+	}
+
+	return true
+}
