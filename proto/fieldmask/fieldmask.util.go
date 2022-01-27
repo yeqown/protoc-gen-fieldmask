@@ -11,13 +11,17 @@ import (
 // NestedFieldMask helps to build a nested field mask.
 type NestedFieldMask map[string]NestedFieldMask
 
-// New returns a new NestedFieldMask.
+// New returns a new NestedFieldMask with the given field mask.
 func New(fm *fieldmaskpb.FieldMask) NestedFieldMask {
 	if fm == nil {
 		return nil
 	}
 
-	paths := fm.GetPaths()
+	return NewWithPaths(fm.GetPaths()...)
+}
+
+// NewWithPaths returns a new NestedFieldMask with the given paths.
+func NewWithPaths(paths ...string) NestedFieldMask {
 	if len(paths) == 0 {
 		return nil
 	}
@@ -63,13 +67,15 @@ func (mask NestedFieldMask) Filter(m proto.Message) {
 		}
 
 		// repeated field type
-		if fd.IsList() {
-			// TODO(@yeqown): skip basic type composite list fields
+		if fd.IsList() && fd.Kind() == protoreflect.MessageKind {
 			l := pr.Get(fd).List()
 			for i := 0; i < l.Len(); i++ {
 				nfm.Filter(l.Get(i).Message().Interface())
 			}
-		} else if fd.Kind() == protoreflect.MessageKind {
+			return true
+		}
+
+		if fd.Kind() == protoreflect.MessageKind {
 			nfm.Filter(pr.Get(fd).Message().Interface())
 		}
 
@@ -96,12 +102,21 @@ func (mask NestedFieldMask) Prune(m proto.Message) {
 
 		// repeated field type
 		if fd.IsList() {
-			// TODO(@yeqown): skip basic type composite list fields
-			list := pr.Get(fd).List()
-			for i := 0; i < list.Len(); i++ {
-				nfm.Prune(list.Get(i).Message().Interface())
+			switch fd.Kind() {
+			case protoreflect.MessageKind:
+				l := pr.Get(fd).List()
+				for i := 0; i < l.Len(); i++ {
+					nfm.Prune(l.Get(i).Message().Interface())
+				}
+			default:
+				// FIXED(@yeqown): list field with invalid path,
+				// such as "a.b" but a is not []message. However a should be pruned.
+				pr.Clear(fd)
 			}
-		} else if fd.Kind() == protoreflect.MessageKind {
+			return true
+		}
+
+		if fd.Kind() == protoreflect.MessageKind {
 			nfm.Prune(pr.Get(fd).Message().Interface())
 		}
 

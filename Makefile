@@ -18,6 +18,6 @@ prepare-debug:
 	protoc \
 		-I=./examples/pb \
 		-I=./proto \
-		 --plugin=protoc-gen-debug=${debug_path} \
+		--plugin=protoc-gen-debug=${debug_path} \
 		--debug_out="./internal/module/debugdata:." \
 		./examples/pb/user.proto

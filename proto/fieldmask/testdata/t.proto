@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package debugdata;
+
+option go_package = "/;t";
+
+message T1 {
+  message Embed {
+    int32 e1 = 1;
+    string e2 = 2;
+  }
+
+  repeated int32 a = 1;
+  repeated RepeatMessage b = 2;
+  string c = 3;
+  bool d = 4;
+  Embed e = 5;
+}
+
+message RepeatMessage {
+  string m1 = 1;
+  uint64 m2 = 2;
+}

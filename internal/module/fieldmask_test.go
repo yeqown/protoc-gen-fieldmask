@@ -45,8 +45,8 @@ func mutateLangParam(lang string) pgs.ParamMutator {
 
 func (m *moduleTestSuite) Test_ForDebug() {
 	// please look up the README at repository root directory to see how to
-	// generate the `debugdata` and code_generator_request binary.
-	req, err := os.Open("./debugdata/code_generator_request.pb.bin")
+	// generate the `testdata` and code_generator_request binary.
+	req, err := os.Open("./testdata/code_generator_request.pb.bin")
 	m.NoError(err)
 
 	fs := afero.NewMemMapFs()
