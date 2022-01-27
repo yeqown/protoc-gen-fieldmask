@@ -88,7 +88,7 @@ message UserInfoResponse {
 }
 ```
 
-2. generated [user.pb.go](./examples/normal/user.pb.go), [user.pb.fm.go](./examples/normal/user.pb.fm.go)：
+2. generated [user.pb.go](./examples/pb/user.pb.go), [user.pb.fm.go](./examples/pb/user.pb.fm.go)：
 
 ```sh
 cd examples && make gen-pb

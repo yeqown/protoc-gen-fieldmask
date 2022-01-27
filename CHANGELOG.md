@@ -1,4 +1,13 @@
-# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.0...v) (2022-01-26)
+# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.1...v) (2022-01-27)
+
+
+
+## [0.3.1](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.0...v0.3.1) (2022-01-27)
+
+
+### Features
+
+* **proto:** enhance Filter and Prune action for nestedFieldMask ([66284ba](https://github.com/yeqown/protoc-gen-fieldmask/commit/66284ba4c4bf293dd6b4b7e404449165aa770b75))
 
 
 
