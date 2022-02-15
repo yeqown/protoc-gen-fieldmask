@@ -1,3 +1,4 @@
+{{ if .Message }}
 {{ $fields := .Message.Fields }}
 {{ $fmFieldName := .fmFieldName }}
 {{ $inMessageName := .inMessageName }}
@@ -43,4 +44,5 @@
         {{ end }}
 
     {{ end }}
+{{ end }}
 {{ end }}
