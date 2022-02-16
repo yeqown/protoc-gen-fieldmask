@@ -56,6 +56,7 @@ func (m *FieldMaskModule) Execute(targets map[string]pgs.File, packages map[stri
 	// m.Assert(len(tpls) != 0, " could not find templates for `lang`: ", lang)
 	_ = tpls
 
+	outMessageVars := map[string]struct{}{}
 	for _, f := range targets {
 		m.Push(f.Name().String()).Debug("fieldmask")
 
@@ -97,6 +98,10 @@ func (m *FieldMaskModule) Execute(targets map[string]pgs.File, packages map[stri
 					paris[idx].OutMessage, ok = fileMessagesMapping[outMessageName]
 					if !ok {
 						continue
+					}
+					if _, found := outMessageVars[outMessageName]; !found {
+						paris[idx].GenOutMessageVar = true
+						outMessageVars[outMessageName] = struct{}{}
 					}
 				}
 
