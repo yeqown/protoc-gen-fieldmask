@@ -10,6 +10,7 @@ type outFieldMaskContext struct {
 type fmMessagePair struct {
 	*checkInMessageVO
 
-	InMessage  pgs.Message
-	OutMessage pgs.Message
+	InMessage        pgs.Message
+	OutMessage       pgs.Message
+	GenOutMessageVar bool
 }
