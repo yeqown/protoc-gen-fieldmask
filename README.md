@@ -34,7 +34,7 @@ deal with `FieldMask` message.
 ### Installation
 
 ```sh
-go install github.com/yeqwown/protoc-gen-fieldmask@latest
+go install github.com/yeqown/protoc-gen-fieldmask@latest
 ```
 
 ### Examples
