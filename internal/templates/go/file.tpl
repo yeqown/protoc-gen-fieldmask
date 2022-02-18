@@ -9,15 +9,23 @@ import (
 )
 
 {{ range $idx, $pair := .FieldMaskPairs }}
-    {{ if or (eq $pair.FieldMaskOption.In.Gen true) (eq $pair.FieldMaskOption.Out.Gen true) }}
+    {{ $inGen := false }}
+    {{ if $pair.FieldMaskOption.In }}
+        {{ $inGen = $pair.FieldMaskOption.In.Gen }}
+    {{ end }}
+    {{ $outGen := false }}
+    {{ if $pair.FieldMaskOption.Out }}
+        {{ $outGen = $pair.FieldMaskOption.Out.Gen }}
+    {{ end }}
+    {{ if or (eq $inGen true) (eq $outGen true) }}
         {{ template "fm" . }}
     {{ end }}
 
-    {{ if eq $pair.FieldMaskOption.In.Gen true }}
+    {{ if eq $inGen true }}
         {{ template "fm.in" . }}
     {{ end }}
 
-    {{ if eq $pair.FieldMaskOption.Out.Gen true }}
+    {{ if eq $outGen true }}
         {{ template "fm.out" . }}
     {{ end }}
 {{ end }}
