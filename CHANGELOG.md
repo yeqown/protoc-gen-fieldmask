@@ -1,4 +1,13 @@
-# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.2...v) (2022-02-21)
+# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.3...v) (2022-02-21)
+
+
+
+## [0.3.3](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.2...v0.3.3) (2022-02-21)
+
+
+### Bug Fixes
+
+* generate un-exported fieldMaskWithMode method ([c52f499](https://github.com/yeqown/protoc-gen-fieldmask/commit/c52f49914f36ca656dc067552ec04fb2db215f4e))
 
 
 
