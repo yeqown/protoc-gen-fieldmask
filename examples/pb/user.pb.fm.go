@@ -8,7 +8,7 @@ import (
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
-func (x *UserInfoRequest) FieldMaskWithMode(mode pbfieldmask.MaskMode) *UserInfoRequest_FieldMask {
+func (x *UserInfoRequest) fieldMaskWithMode(mode pbfieldmask.MaskMode) *UserInfoRequest_FieldMask {
 	fm := &UserInfoRequest_FieldMask{
 		maskMode: mode,
 		mask:     pbfieldmask.New(x.FieldMask),
@@ -17,18 +17,18 @@ func (x *UserInfoRequest) FieldMaskWithMode(mode pbfieldmask.MaskMode) *UserInfo
 	return fm
 }
 
-// FieldMask_Prune generates *UserInfoRequest_FieldMask with filter mode, so that
+// FieldMask_Filter generates *UserInfoRequest_FieldMask with filter mode, so that
 // only the fields in the UserInfoRequest.FieldMask will be
 // appended into the UserInfoRequest.
 func (x *UserInfoRequest) FieldMask_Filter() *UserInfoRequest_FieldMask {
-	return x.FieldMaskWithMode(pbfieldmask.MaskMode_Filter)
+	return x.fieldMaskWithMode(pbfieldmask.MaskMode_Filter)
 }
 
 // FieldMask_Prune generates *UserInfoRequest_FieldMask with prune mode, so that
 // only the fields NOT in the UserInfoRequest.FieldMask will be
 // appended into the UserInfoRequest.
 func (x *UserInfoRequest) FieldMask_Prune() *UserInfoRequest_FieldMask {
-	return x.FieldMaskWithMode(pbfieldmask.MaskMode_Prune)
+	return x.fieldMaskWithMode(pbfieldmask.MaskMode_Prune)
 }
 
 // UserInfoRequest_FieldMask provide provide helper functions to deal with FieldMask.
@@ -55,7 +55,7 @@ func (x *UserInfoRequest) MaskIn_UserId() *UserInfoRequest {
 // exists in the UserInfoRequest.FieldMask or not.
 func (x *UserInfoRequest_FieldMask) MaskedIn_UserId() bool {
 	if x.mask == nil {
-		return false
+		return true
 	}
 
 	return x.mask.Masked("user_id")
@@ -79,7 +79,7 @@ func (x *UserInfoRequest) MaskOut_UserId() *UserInfoRequest {
 // exists in the UserInfoRequest.FieldMask or not.
 func (x *UserInfoRequest_FieldMask) MaskedOut_UserId() bool {
 	if x.mask == nil {
-		return false
+		return true
 	}
 
 	return x.mask.Masked("user_id")
@@ -100,7 +100,7 @@ func (x *UserInfoRequest) MaskOut_Name() *UserInfoRequest {
 // exists in the UserInfoRequest.FieldMask or not.
 func (x *UserInfoRequest_FieldMask) MaskedOut_Name() bool {
 	if x.mask == nil {
-		return false
+		return true
 	}
 
 	return x.mask.Masked("name")
@@ -121,7 +121,7 @@ func (x *UserInfoRequest) MaskOut_Email() *UserInfoRequest {
 // exists in the UserInfoRequest.FieldMask or not.
 func (x *UserInfoRequest_FieldMask) MaskedOut_Email() bool {
 	if x.mask == nil {
-		return false
+		return true
 	}
 
 	return x.mask.Masked("email")
@@ -142,7 +142,7 @@ func (x *UserInfoRequest) MaskOut_Address() *UserInfoRequest {
 // exists in the UserInfoRequest.FieldMask or not.
 func (x *UserInfoRequest_FieldMask) MaskedOut_Address() bool {
 	if x.mask == nil {
-		return false
+		return true
 	}
 
 	return x.mask.Masked("address")
@@ -163,7 +163,7 @@ func (x *UserInfoRequest) MaskOut_Address_Country() *UserInfoRequest {
 // exists in the UserInfoRequest.FieldMask or not.
 func (x *UserInfoRequest_FieldMask) MaskedOut_Address_Country() bool {
 	if x.mask == nil {
-		return false
+		return true
 	}
 
 	return x.mask.Masked("address.country")
@@ -184,7 +184,7 @@ func (x *UserInfoRequest) MaskOut_Address_Province() *UserInfoRequest {
 // exists in the UserInfoRequest.FieldMask or not.
 func (x *UserInfoRequest_FieldMask) MaskedOut_Address_Province() bool {
 	if x.mask == nil {
-		return false
+		return true
 	}
 
 	return x.mask.Masked("address.province")

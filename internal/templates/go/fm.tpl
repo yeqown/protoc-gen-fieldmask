@@ -2,7 +2,7 @@
 {{ $outMessageName := .OutMessage.Name }}
 {{ $fmField := .FieldMaskField }}
 
-func (x *{{ $inMessageName }}) FieldMaskWithMode(mode pbfieldmask.MaskMode) *{{ $inMessageName }}_FieldMask {
+func (x *{{ $inMessageName }}) fieldMaskWithMode(mode pbfieldmask.MaskMode) *{{ $inMessageName }}_FieldMask {
     fm := &{{ $inMessageName }}_FieldMask{
         maskMode: mode,
         mask: pbfieldmask.New(x.{{$fmField.Name.UpperCamelCase}}),
@@ -11,18 +11,18 @@ func (x *{{ $inMessageName }}) FieldMaskWithMode(mode pbfieldmask.MaskMode) *{{ 
     return fm
 }
 
-// FieldMask_Prune generates *{{ $inMessageName }}_FieldMask with filter mode, so that
+// FieldMask_Filter generates *{{ $inMessageName }}_FieldMask with filter mode, so that
 // only the fields in the {{ $inMessageName }}.{{ $fmField.Name.UpperCamelCase }} will be
 // appended into the {{ $inMessageName }}.
 func (x *{{ $inMessageName }}) FieldMask_Filter() *{{ $inMessageName }}_FieldMask {
-	return x.FieldMaskWithMode(pbfieldmask.MaskMode_Filter)
+	return x.fieldMaskWithMode(pbfieldmask.MaskMode_Filter)
 }
 
 // FieldMask_Prune generates *{{ $inMessageName }}_FieldMask with prune mode, so that
 // only the fields NOT in the {{ $inMessageName }}.{{ $fmField.Name.UpperCamelCase }} will be
 // appended into the {{ $inMessageName }}.
 func (x *{{ $inMessageName }}) FieldMask_Prune() *{{ $inMessageName }}_FieldMask {
-	return x.FieldMaskWithMode(pbfieldmask.MaskMode_Prune)
+	return x.fieldMaskWithMode(pbfieldmask.MaskMode_Prune)
 }
 
 // {{ $inMessageName }}_FieldMask provide provide helper functions to deal with FieldMask.
