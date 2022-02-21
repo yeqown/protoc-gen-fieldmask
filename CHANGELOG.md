@@ -1,4 +1,17 @@
-# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.1...v) (2022-01-27)
+# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.2...v) (2022-02-21)
+
+
+
+## [0.3.2](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.1...v0.3.2) (2022-02-21)
+
+
+### Bug Fixes
+
+* allow one of .in or .out option to be skipped ([c36b4f9](https://github.com/yeqown/protoc-gen-fieldmask/commit/c36b4f91a019101b32a06144add0b1836f2ce75c))
+* generate out message vars only once per type ([46245c3](https://github.com/yeqown/protoc-gen-fieldmask/commit/46245c337fd53483095b1949073fb3f7b1ece14f))
+* generated Masked function return value when field mask is nil ([79674c1](https://github.com/yeqown/protoc-gen-fieldmask/commit/79674c1e1b9b1592edf7bb64ffcce725f555bbbd))
+* go install github.com/yeqown/protoc-gen-fieldmask@latest ([d59e3ad](https://github.com/yeqown/protoc-gen-fieldmask/commit/d59e3adc37ee7fc35412fcec50e6098ca556fd8a))
+* support repeated and map fields in field_mask ([11a780a](https://github.com/yeqown/protoc-gen-fieldmask/commit/11a780a5803738438c768cc254ec52d4e2934484))
 
 
 
