@@ -20,7 +20,8 @@ option go_package = "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask;fiel
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.FieldOptions {
-  optional FieldMask Option = 1412;
+  // The extension number was applied from https://github.com/protocolbuffers/protobuf/pull/9646.
+  optional FieldMask Option = 1142;
 }
 
 // FieldMask rules applied at the field level
