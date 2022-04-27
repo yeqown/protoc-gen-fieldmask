@@ -11,7 +11,9 @@ import (
 	"examples/pb"
 )
 
-type userServer struct{}
+type userServer struct {
+	pb.UnimplementedUserInfoServer
+}
 
 func (u userServer) GetUserInfo(
 	ctx context.Context,

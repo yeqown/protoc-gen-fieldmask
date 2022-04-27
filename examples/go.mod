@@ -1,10 +1,10 @@
 module examples
 
-go 1.17
+go 1.18
 
 require (
 	github.com/stretchr/testify v1.7.0
-	github.com/yeqown/protoc-gen-fieldmask v1.0.0
+	github.com/yeqown/protoc-gen-fieldmask v0.3.5
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.26.0
 )

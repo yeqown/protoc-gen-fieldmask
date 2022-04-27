@@ -31,7 +31,7 @@ var (
 	_tplFieldMaskOutGO []byte
 )
 
-func makeTemplatesForGo(ctx pgsgo.Context) *template.Template {
+func makeTemplatesForGo(ctx pgsgo.Context) *templates.Lang {
 	tpl := template.New("go")
 
 	shared.RegisterFunctions(tpl, ctx)
@@ -41,5 +41,9 @@ func makeTemplatesForGo(ctx pgsgo.Context) *template.Template {
 	template.Must(tpl.New("fm.in").Parse(string(_tplFieldMaskInGO)))
 	template.Must(tpl.New("fm.out").Parse(string(_tplFieldMaskOutGO)))
 
-	return tpl
+	return &templates.Lang{
+		Name:      "go",
+		Ext:       ".fm.go",
+		Templates: []*template.Template{tpl},
+	}
 }

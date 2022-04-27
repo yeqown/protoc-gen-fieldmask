@@ -7,6 +7,15 @@ import "fieldmask/option.proto";
 
 option go_package = "/;pb";
 
+message UserListRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  google.protobuf.FieldMask field_mask = 3 [
+    (fieldmask.option.Option).in = {gen: false},
+    (fieldmask.option.Option).out = {gen: true, message:"UserInfoResponse"}
+  ];
+}
+
 message UserInfoRequest {
   string user_id = 1;
   google.protobuf.FieldMask field_mask = 2 [
