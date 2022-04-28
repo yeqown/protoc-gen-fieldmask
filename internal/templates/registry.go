@@ -5,10 +5,13 @@ import (
 	"text/template"
 )
 
+// Registry is a registry of multi-language templates.
 type Registry struct {
 	settings map[string]*Lang
 }
 
+// Lang is a language template setting to describe the template and ext filename
+// for protoc-gen-fieldmask.
 type Lang struct {
 	Name      string               // Name of the language
 	Ext       string               // file extension name, such as 'fm.go'
@@ -28,6 +31,7 @@ func (r *Registry) Load(lang string) *Lang {
 		return ls
 	}
 
+	fmt.Printf("load lang %s failed: not found in registry\n", lang)
 	return nil
 }
 
