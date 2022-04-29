@@ -1,12 +1,30 @@
 syntax = "proto3";
 
-package fm.example.pb;
+package pb;
 
 import "google/protobuf/field_mask.proto";
 import "fieldmask/option.proto";
+import "common/common.proto";
 
 option go_package = "/;pb";
 
+// UserInfoRequest is the the normal case, generating fieldmask for
+// in and out messages.
+//
+// #CASE-1
+message UserInfoRequest {
+  string user_id = 1;
+  google.protobuf.FieldMask field_mask = 2 [
+    (fieldmask.option.Option).in = {gen: true},
+    (fieldmask.option.Option).out = {gen: true, message:"UserInfoResponse"}
+  ];
+}
+
+// UserListRequest describes the request message for listing users. It defines
+// the field_mask option to generate out message's fieldmask only, what's
+// important is that the out message is duplicated with the Case1_UserInfoRequest.
+//
+// #CASE-2
 message UserListRequest {
   int32 page_size = 1;
   string page_token = 2;
@@ -16,12 +34,32 @@ message UserListRequest {
   ];
 }
 
-message UserInfoRequest {
-  string user_id = 1;
-  google.protobuf.FieldMask field_mask = 2 [
+// OtherPackageResponse is associated with a specific message entity which
+// is defined in another package.
+//
+// #CASE-3
+//
+// NOTE: while compiling this file, you must import the target package like this:
+// NOTE: `import path/to/pb/common.proto`, `path/to/pb/common.proto` indicates the correct path
+// NOTE: which contains 'pb.common.CommonResponse'.
+//
+// However, you don't have to use the message (eg. meta field), but it
+// have to be imported. To avoid using the useless message, you can create
+// a special message (eg. _FM_NEVER_USE) to contains these messages and never use it.
+message OtherPackageResponse {
+  // pb.common.CommonResponse meta = 1;
+  reserved 1;
+
+  string user_id = 2;
+  uint32 count = 3;
+  google.protobuf.FieldMask field_mask = 4 [
     (fieldmask.option.Option).in = {gen: true},
-    (fieldmask.option.Option).out = {gen: true, message:"UserInfoResponse"}
+    (fieldmask.option.Option).out = {gen: true, message:"pb.common.CommonResponse"}
   ];
+}
+
+message _FM_NEVER_USE {
+  pb.common.CommonResponse meta = 1;
 }
 
 message Address {

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pb.common;
+
+option go_package = "examples/pb/common;common";
+
+// Common message works as a example that the out message doesn't
+// exist in the one file which contains the in message.
+message CommonResponse {
+  message Error {
+    uint32 code = 1;
+    string message = 2;
+  }
+
+  Error err = 1;
+  string trace_id = 2;
+}
