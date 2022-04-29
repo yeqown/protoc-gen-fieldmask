@@ -4,9 +4,10 @@
 package pb
 
 import (
-	commonpb "examples/pb/common"
 	pbfieldmask "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+
+	common "examples/pb/common"
 )
 
 func (x *UserInfoRequest) fieldMaskWithMode(mode pbfieldmask.MaskMode) *UserInfoRequest_FieldMask {
@@ -445,7 +446,7 @@ func (x *OtherPackageResponse_FieldMask) MaskedIn_Count() bool {
 }
 
 // _fm_CommonResponse is built in variable for CommonResponse to call FieldMask.Append
-var _fm_CommonResponse = new(commonpb.CommonResponse)
+var _fm_CommonResponse = new(common.CommonResponse)
 
 // MaskOut_Err append CommonResponse.Err into
 // OtherPackageResponse.FieldMask.
@@ -532,7 +533,7 @@ func (x *OtherPackageResponse_FieldMask) MaskedOut_TraceId() bool {
 }
 
 // Mask only affects the fields in the OtherPackageResponse.
-func (x *OtherPackageResponse_FieldMask) Mask(m *commonpb.CommonResponse) *commonpb.CommonResponse {
+func (x *OtherPackageResponse_FieldMask) Mask(m *common.CommonResponse) *common.CommonResponse {
 	switch x.maskMode {
 	case pbfieldmask.MaskMode_Filter:
 		x.mask.Filter(m)

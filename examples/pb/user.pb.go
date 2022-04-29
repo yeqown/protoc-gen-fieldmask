@@ -7,11 +7,11 @@
 package pb
 
 import (
+	common "examples/pb/common"
 	_ "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
-	common "pb/common"
 	reflect "reflect"
 	sync "sync"
 )

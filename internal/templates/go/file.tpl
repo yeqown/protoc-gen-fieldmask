@@ -6,6 +6,10 @@ package {{ pkg .File }}
 import (
     pbfieldmask "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask"
     fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+
+    {{ range $import := .ImportPaths }}
+        {{ $import.PkgName}} "{{$import.ImportPath}}"
+    {{ end }}
 )
 
 {{ range $idx, $pair := .FieldMaskPairs }}
