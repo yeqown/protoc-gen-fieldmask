@@ -1,4 +1,28 @@
-# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.3...v) (2022-02-21)
+# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.4.0...v) (2022-05-05)
+
+
+### Features
+
+* locate message support multi packages ([942375d](https://github.com/yeqown/protoc-gen-fieldmask/commit/942375de047e96a171b13a8ae68f3b6aedbca737))
+* locate package import and package name ([f0ad631](https://github.com/yeqown/protoc-gen-fieldmask/commit/f0ad631bb3f23d1fecff32e3f594cf4237806e07))
+
+
+
+## [0.3.5](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.4...v0.3.5) (2022-03-21)
+
+
+### Features
+
+* **proto:** use official extension registry sequence number as extension number. ([5ee69f9](https://github.com/yeqown/protoc-gen-fieldmask/commit/5ee69f90e4a8155763becee99680fcf19affdea3))
+
+
+
+## [0.3.4](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.3.3...v0.3.4) (2022-03-17)
+
+
+### Bug Fixes
+
+* **issue/15:** replace the extension number ([13b609f](https://github.com/yeqown/protoc-gen-fieldmask/commit/13b609fc42c7765dd1aa77051f2a2c600191548a))
 
 
 
