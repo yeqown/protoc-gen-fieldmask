@@ -170,11 +170,11 @@ func main() {
 
     ```sh
     protoc \
-        -I=./examples/normal \
-        -I=./proto \
-        --plugin=protoc-gen-debug=$(which protoc-gen-debug) \
-        --debug_out="./debugdata,lang=go:./debugdata" \
-        ./examples/normal/user.proto
+      -I=./examples/pb \
+      -I=./proto \
+      --plugin=protoc-gen-debug=${debug_path} \
+      --debug_out="./internal/module/debugdata:." \
+      ./examples/pb/user.proto
     ```
 - debug [Test_ForDebug](./internal/module/fieldmask_test.go#L46) test suite
   in [internal/module/fieldmask_test.go](./internal/module/fieldmask_test.go)

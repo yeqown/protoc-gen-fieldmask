@@ -21,7 +21,7 @@ const (
 	google_protobuf_FieldMask = ".google.protobuf.FieldMask"
 )
 
-func (m *FieldMaskModule) checkInMessage(message pgs.Message) (r *checkInMessageVO) {
+func checkInMessage(message pgs.Message, debugf func(string, ...interface{})) (r *checkInMessageVO) {
 	if message == nil {
 		return nil
 	}
@@ -34,7 +34,7 @@ func (m *FieldMaskModule) checkInMessage(message pgs.Message) (r *checkInMessage
 			// not message type, fast fail.
 			continue
 		}
-		m.Debugf("field (%s.%s:%s) is checking deeper", m.Name(), f.Name(), f.Descriptor().GetTypeName())
+		debugf("field (%s.%s:%s) is checking deeper", message.Name(), f.Name(), f.Descriptor().GetTypeName())
 
 		if f.Descriptor().GetTypeName() != google_protobuf_FieldMask {
 			// field's type not match google.protobuf.FieldMask
@@ -48,7 +48,7 @@ func (m *FieldMaskModule) checkInMessage(message pgs.Message) (r *checkInMessage
 			return nil
 		}
 
-		m.Debugf("message (%s) hit", m.Name())
+		debugf("message (%s) hit", message.Name())
 		r.FieldMaskOption = opt
 		r.FieldMaskField = f
 
