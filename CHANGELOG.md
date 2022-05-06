@@ -1,4 +1,13 @@
-# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.4.0...v) (2022-05-05)
+# [](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.4.1...v) (2022-05-06)
+
+
+
+## [0.4.1](https://github.com/yeqown/protoc-gen-fieldmask/compare/v0.4.0...v0.4.1) (2022-05-06)
+
+
+### Bug Fixes
+
+* **template:** the message template pass the wrong mode param ([d9934ad](https://github.com/yeqown/protoc-gen-fieldmask/commit/d9934adcd092d0c48249a11ba5e217ad26bc79eb))
 
 
 ### Features
