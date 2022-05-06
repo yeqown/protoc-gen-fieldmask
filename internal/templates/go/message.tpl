@@ -40,7 +40,7 @@
         {{ if eq $recursive true }}
             {{ $suffix2 := printf "%s%s_" $suffix $fieldName }}
             {{ $pathSuffix2 := printf "%s%s." $pathSuffix $f.Name }}
-            {{ template "message" dict "Message" $f.Type.Embed "inMessageName" $inMessageName  "fmFieldName" $fmFieldName "inOut" "Out" "suffix" $suffix2 "pathSuffix" $pathSuffix2 "messageName" $messageName }}
+            {{ template "message" dict "Message" $f.Type.Embed "inMessageName" $inMessageName  "fmFieldName" $fmFieldName "inOut" $inOut "suffix" $suffix2 "pathSuffix" $pathSuffix2 "messageName" $messageName }}
         {{ end }}
 
     {{ end }}
