@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package homework.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/field_mask.proto";
+import "fieldmask/option.proto";
+
+option go_package = "homework/api/homework/v1;v1";
+option java_multiple_files = true;
+option java_package = "homework.v1";
+
+// The homework service definition.
+service Homework {
+  // 查询作业
+  rpc GetHomework (GetHomeworkRequest) returns (GetHomeworkReply) {
+    option (google.api.http) = {
+      get: "/api/homeworks/{homework_id}",
+      body: ''
+    };
+  }
+  // 更新作业
+  rpc UpdateHomework (UpdateHomeworkRequest) returns (UpdateHomeworkReply) {
+    option (google.api.http) = {
+      put: "/api/homeworks/{homework_id}",
+      body: ""
+    };
+  }
+  // 创建作业
+  rpc CreateHomework (CreateHomeworkRequest) returns (CreateHomeworkReply) {
+    option (google.api.http) = {
+      post: "/api/homeworks",
+      body: "*"
+    };
+  }
+}
+
+// 作业详情
+message HomeworkInfo {
+  string homework_id = 1;
+  string class_id = 2;
+  int32 role_id = 3;
+  int32 expiry = 4;
+  string text = 5;
+  string media = 6;
+  string subject = 7;
+  int32 send_time = 8;
+  int32 create_time = 9;
+  int32 modify_time = 10;
+  int32 read_button = 11;
+  int32 correction_remind = 12;
+  int32 submit_after_expiry = 13;
+  int32 answer_button = 14;
+  int32 good_button = 15;
+  string media_answer = 16;
+  int32 auto_flag = 17;
+  int32 user_id = 18;
+  int32 remind = 19;
+  repeated string children_list = 20;
+  string media_template = 21;
+  string isbn_simple_list = 22;
+  int32 submit_by_teacher = 23;
+  string comment = 24;
+  int32 type = 25;
+  string homework_title = 26;
+  int32 correct_mode = 27;
+  string cost_time = 28;
+  int32 is_calc_score = 29;
+}
+
+message GetHomeworkRequest {
+  string class_id = 1;
+  string homework_id = 2;
+  string subject = 3;
+  string type = 4;
+  google.protobuf.FieldMask field_mask = 5 [
+    (fieldmask.option.Option).in = {gen: true},
+    (fieldmask.option.Option).out = {gen: true, message:"GetHomeworkReply"}
+  ];
+}
+message GetHomeworkReply {
+  HomeworkInfo homework_info = 1;
+}
+
+message UpdateHomeworkRequest {
+  string homework_id = 1;
+  HomeworkInfo homework_info = 2;
+  google.protobuf.FieldMask field_mask = 3 [
+    (fieldmask.option.Option).in = {gen: true},
+    (fieldmask.option.Option).out = {gen: true, message:"UpdateHomeworkReply"}
+  ];
+}
+message UpdateHomeworkReply {
+  HomeworkInfo updated_homework_info = 1;
+}
+
+message CreateHomeworkRequest {
+  HomeworkInfo homework_info = 1;
+  google.protobuf.FieldMask field_mask = 2 [
+    (fieldmask.option.Option).in = {gen: true},
+    (fieldmask.option.Option).out = {gen: true, message:"CreateHomeworkReply"}
+  ];
+}
+message CreateHomeworkReply {
+  HomeworkInfo homework_info = 1;
+}
