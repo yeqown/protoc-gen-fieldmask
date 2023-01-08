@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package iss.issue21;
+
+import "google/protobuf/field_mask.proto";
+import "fieldmask/option.proto";
+import "issue21_1.proto";
+
+message BatchGetUserRequest {
+  string user_id = 1;
+  google.protobuf.FieldMask user_field_mask = 2 [
+    (fieldmask.option.Option).in = {gen: false},
+    (fieldmask.option.Option).out = {
+      gen: true,
+      message: "BatchGetUserResponse",
+    }
+  ];
+}
+
+message BatchGetUserResponse {
+  repeated User users = 1;
+}
