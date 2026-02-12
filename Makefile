@@ -9,9 +9,9 @@ test:
 
 gen-fm-pb:
 	protoc \
-		-I=./proto \
-		--go_out=paths=source_relative:./proto \
-		./proto/fieldmask/option.proto
+		-I=./third_party \
+		--go_out=paths=source_relative:./protobuf \
+		./protoc_gen_fieldmask/option.proto
 
 prepare-debug:
 	- mkdir internal/module/debugdata

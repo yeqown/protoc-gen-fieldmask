@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package intermediate;
+
+import "google/protobuf/field_mask.proto";
+import "protoc-gen-fieldmask/options.proto";
+
+option go_package = "github.com/yeqown/protoc-gen-fieldmask/examples/02_intermediate;intermediate";
+
+// Address represents a user's address.
+message Address {
+  string country = 1;
+  string province = 2;
+  string city = 3;
+}
+
+// UpdateUserRequest updates user information.
+// This demonstrates:
+// 1. PRUNE mode - masked fields are excluded from update
+// 2. Field-level options - ignore and nested
+message UpdateUserRequest {
+  string user_id = 1;
+  string name = 2;
+  // Email is marked as ignore - no mask methods will be generated for it
+  string email = 3 [(protoc_gen_fieldmask.field) = {ignore: true}];
+  // Address is marked as nested - will get nested FieldMask methods
+  Address address = 4 [(protoc_gen_fieldmask.field) = {nested: true}];
+  google.protobuf.FieldMask fm = 5;
+}
+
+// UpdateUserResponse is the response after update.
+message UpdateUserResponse {
+  string user_id = 1;
+  string name = 2;
+  string email = 3;
+  Address address = 4;
+}
+
+// UserService demonstrates intermediate features:
+// - PRUNE mode for updates
+// - Field-level options (ignore, nested)
+service UserService {
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: PRUNE
+    };
+  }
+}

@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package basic;
+
+import "google/protobuf/field_mask.proto";
+import "protoc-gen-fieldmask/options.proto";
+
+option go_package = "github.com/yeqown/protoc-gen-fieldmask/examples/01_basic;basic";
+
+// User represents a simple user entity.
+message User {
+  string user_id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+// GetUserRequest is a basic request to get user information.
+message GetUserRequest {
+  string user_id = 1;
+  // FieldMask to control which fields to return in response
+  google.protobuf.FieldMask fm = 2;
+}
+
+// GetUserResponse is the response containing user information.
+message GetUserResponse {
+  string user_id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+// UserService provides basic user operations.
+service UserService {
+  // GetUser demonstrates the most basic usage:
+  // - FILTER mode: only masked fields are included in response
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: FILTER
+    };
+  }
+}
