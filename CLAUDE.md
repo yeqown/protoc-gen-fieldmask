@@ -165,3 +165,55 @@ internal/
 ### Next Steps ⏳
 7. **Test new implementation** - Validate generated code works correctly with examples
 8. **Update examples** - Create comprehensive examples using new V2 API
+9. **Fix template test** - Update registry_go_test.go to work with new template structure
+
+### Usage Example (V2 API)
+
+```protobuf
+syntax = "proto3";
+
+package example;
+
+import "google/protobuf/field_mask.proto";
+import "protoc-gen-fieldmask/options.proto";
+
+message UserInfoRequest {
+  string user_id = 1;
+  google.protobuf.FieldMask fm = 2;
+}
+
+message UserInfoResponse {
+  string user_id = 1;
+  string name = 2;
+  string email = 3 [(protoc_gen_fieldmask.field) = {ignore: true}];
+  Address address = 4 [(protoc_gen_fieldmask.field) = {nested: true}];
+}
+
+service UserService {
+  rpc GetUserInfo(UserInfoRequest) returns (UserInfoResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: FILTER
+    };
+  }
+}
+```
+
+Generated Go API:
+```go
+// Create field mask with filter mode
+fm := req.FieldMask(fieldmask.FILTER)
+
+// Mark fields to include
+fm.Response().UserId()
+fm.Response().Name()
+fm.Response().Address().Country()
+
+// Check if fields are marked
+if fm.Marked().Response().Name() {
+    // Field is marked
+}
+
+// Apply mask to response
+fm.Response().Apply(&response)
+```
