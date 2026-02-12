@@ -134,11 +134,34 @@ For an input message with FieldMask field:
 internal/
 ├── module/              # Core plugin logic
 │   ├── fieldmask.go    # Main module and pipeline
-│   ├── fm_message_in.go   # Input message processing
-│   ├── fm_message_out.go  # Output message processing
+│   ├── fm_message_out.go  # Message processing (renamed from fm_message_in.go)
 │   └── cache.go        # Message caching for imports
 └── templates/          # Code generation templates
     ├── registry.go     # Template registry
     ├── shared/         # Shared template functions
     └── go/             # Go templates
 ```
+
+## Refactoring Progress (V2 Design)
+
+### Completed Tasks ✓
+1. **Analyze current project structure and implementation** - Understood existing architecture
+2. **Create new option.proto based on proposal** - Redesigned options using MethodOptions + FieldOptions
+3. **Refactor internal/module to support new options** - Updated fieldmask.go and fm_message_out.go
+4. **Update code generation templates** - Created new templates for V2 API design:
+   - `file.tpl` - Updated main file template
+   - `request_mask.tpl` - New request field masking template
+   - `response_mask.tpl` - New response field masking template
+   - `marked_checker.tpl` - Field checking utilities
+5. **Fix dependencies and build issues** - Resolved Go module dependencies and build errors
+6. **Separate CLI and package modules** - Created independent go.mod for pkg module
+
+### Architecture Changes
+- **Method-level options**: Now uses `MethodOptions` extension on RPC methods instead of field-level options
+- **Field-level options**: Uses `FieldOptions` for fine-grained control over individual fields
+- **Clean separation**: CLI code (main.go, internal/) is separated from library code (pkg/)
+- **New API design**: Follows the proposal with unified FieldMask API supporting both FILTER and PRUNE modes
+
+### Next Steps ⏳
+7. **Test new implementation** - Validate generated code works correctly with examples
+8. **Update examples** - Create comprehensive examples using new V2 API

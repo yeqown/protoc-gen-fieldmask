@@ -7,7 +7,6 @@ import (
 
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
-
 	"github.com/stretchr/testify/suite"
 
 	"github.com/yeqown/protoc-gen-fieldmask/internal/templates/shared"

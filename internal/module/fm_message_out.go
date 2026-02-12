@@ -1,6 +1,10 @@
 package module
 
-import pgs "github.com/lyft/protoc-gen-star"
+import (
+	pgs "github.com/lyft/protoc-gen-star"
+
+	fieldmask "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask"
+)
 
 type outFieldMaskContext struct {
 	File           pgs.File
@@ -17,13 +21,60 @@ type importPathPair struct {
 }
 
 type fmMessagePair struct {
-	*checkInMessageVO
-
-	InMessage        pgs.Message
-	OutMessage       pgs.Message
-	GenOutMessageVar bool
-
-	// OutMessagePkgName is the package name of the out message,
-	// it's not empty while OutMessage is imported from other protobuf file.
+	MethodOptions     *fieldmask.MethodOptions
+	FieldMaskField    pgs.Field
+	InMessage         pgs.Message
+	OutMessage        pgs.Message
 	OutMessagePkgName string
+}
+
+// checkMethodOptions checks if the method has field mask options configured
+func checkMethodOptions(method pgs.Method, debugf func(string, ...interface{})) (*fieldmask.MethodOptions, bool) {
+	if method == nil {
+		return nil, false
+	}
+
+	var opts fieldmask.MethodOptions
+	_, err := method.Extension(fieldmask.E_Rpc, &opts)
+	if err != nil {
+		return nil, false
+	}
+
+	debugf("method (%s) has fieldmask options", method.Name())
+	return &opts, true
+}
+
+// findFieldMaskField finds the field mask field in the request message
+func findFieldMaskField(message pgs.Message, fieldName string) (pgs.Field, bool) {
+	if message == nil || fieldName == "" {
+		return nil, false
+	}
+
+	fields := message.Fields()
+	for _, field := range fields {
+		if field.Name().String() == fieldName {
+			// Check if it's a google.protobuf.FieldMask type
+			if field.Type().ProtoType() == pgs.MessageT &&
+				field.Descriptor().GetTypeName() == ".google.protobuf.FieldMask" {
+				return field, true
+			}
+		}
+	}
+
+	return nil, false
+}
+
+// checkFieldOptions checks if a field has field mask options configured
+func checkFieldOptions(field pgs.Field) (*fieldmask.FieldOptions, bool) {
+	if field == nil {
+		return nil, false
+	}
+
+	var opts fieldmask.FieldOptions
+	_, err := field.Extension(fieldmask.E_Field, &opts)
+	if err != nil {
+		return nil, false
+	}
+
+	return &opts, true
 }

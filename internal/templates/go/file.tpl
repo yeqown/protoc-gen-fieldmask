@@ -6,32 +6,72 @@
 package {{ pkg .File }}
 
 import (
-    pbfieldmask "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask"
-    fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+	pbfieldmask "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask"
+	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 
-    {{ range $import := .ImportPaths }}
-        {{ $import.PkgName}} "{{$import.ImportPath}}"
-    {{ end }}
+	{{ range $import := .ImportPaths }}
+		{{ $import.PkgName}} "{{$import.ImportPath}}"
+	{{ end }}
 )
 
 {{ range $idx, $pair := .FieldMaskPairs }}
-    {{ $inGen := false }}
-    {{ if $pair.FieldMaskOption.In }}
-        {{ $inGen = $pair.FieldMaskOption.In.Gen }}
-    {{ end }}
-    {{ $outGen := false }}
-    {{ if $pair.FieldMaskOption.Out }}
-        {{ $outGen = $pair.FieldMaskOption.Out.Gen }}
-    {{ end }}
-    {{ if or (eq $inGen true) (eq $outGen true) }}
-        {{ template "fm" . }}
-    {{ end }}
+	{{ $inMessageName := $pair.InMessage.Name }}
+	{{ $outMessageName := $pair.OutMessage.Name }}
+	{{ $fmField := $pair.FieldMaskField }}
+	{{ $methodOpts := $pair.MethodOptions }}
 
-    {{ if eq $inGen true }}
-        {{ template "fm.in" . }}
-    {{ end }}
+	// ============================================================================
+	// {{ $inMessageName }} FieldMask API
+	// ============================================================================
 
-    {{ if eq $outGen true }}
-        {{ template "fm.out" . }}
-    {{ end }}
+	// FieldMask creates a new FieldMask with the specified mode for {{ $inMessageName }}
+	func (x *{{ $inMessageName }}) FieldMask(mode pbfieldmask.MaskMode) *{{ $inMessageName }}_FieldMask {
+		return &{{ $inMessageName }}_FieldMask{
+			mode: mode,
+			mask: fieldmaskpb.New(x.{{ $fmField.Name.UpperCamelCase }}),
+			requestMask: &{{ $inMessageName }}_RequestMask{
+				fm: x,
+			},
+			responseMask: &{{ $inMessageName }}_ResponseMask{
+				fm: x,
+				outMessageName: "{{ $outMessageName }}",
+				outMessagePkgName: "{{ $pair.OutMessagePkgName }}",
+			},
+			marked: &{{ $inMessageName }}_Marked{
+				fm: x,
+			},
+		}
+	}
+
+	// {{ $inMessageName }}_FieldMask provides helper functions to deal with FieldMask.
+type {{ $inMessageName }}_FieldMask struct {
+	mode pbfieldmask.MaskMode
+	mask *fieldmaskpb.FieldMask
+
+	requestMask  *{{ $inMessageName }}_RequestMask
+	responseMask *{{ $inMessageName }}_ResponseMask
+	marked       *{{ $inMessageName }}_Marked
+}
+
+	// Request returns the Request mask operations
+	func (fm *{{ $inMessageName }}_FieldMask) Request() *{{ $inMessageName }}_RequestMask {
+		return fm.requestMask
+	}
+
+	// Response returns the Response mask operations
+	func (fm *{{ $inMessageName }}_FieldMask) Response() *{{ $inMessageName }}_ResponseMask {
+		return fm.responseMask
+	}
+
+	// Marked returns the marked fields checker
+	func (fm *{{ $inMessageName }}_FieldMask) Marked() *{{ $inMessageName }}_Marked {
+		return fm.marked
+	}
+
+{{ template "request_mask" dict "InMessage" $pair.InMessage "OutMessage" $pair.OutMessage "FieldMaskField" $fmField "MethodOptions" $methodOpts }}
+
+{{ template "response_mask" dict "InMessage" $pair.InMessage "OutMessage" $pair.OutMessage "FieldMaskField" $fmField "MethodOptions" $methodOpts }}
+
+{{ template "marked_checker" dict "InMessage" $pair.InMessage "OutMessage" $pair.OutMessage "FieldMaskField" $fmField "MethodOptions" $methodOpts }}
+
 {{ end }}

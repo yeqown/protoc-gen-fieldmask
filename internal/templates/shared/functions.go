@@ -14,10 +14,12 @@ func RegisterFunctions(tpl *template.Template, ctx pgsgo.Context) {
 	fns := sharedFuncs{Context: ctx}
 
 	tpl.Funcs(template.FuncMap{
-		"pkg":       fns.PackageName,
-		"snakeCase": fns.snakeCase,
-		"isMessage": fns.isMessage,
-		"dict":      fns.dict,
+		"pkg":              fns.PackageName,
+		"snakeCase":        fns.snakeCase,
+		"isMessage":        fns.isMessage,
+		"dict":             fns.dict,
+		"fieldOptions":     fns.fieldOptions,
+		"nestedMessageName": fns.nestedMessageName,
 	})
 }
 
@@ -48,4 +50,38 @@ func (fns sharedFuncs) dict(values ...interface{}) (map[string]interface{}, erro
 		dict[key] = values[i+1]
 	}
 	return dict, nil
+}
+
+func (fns sharedFuncs) fieldOptions(field pgs.Field) map[string]interface{} {
+	result := map[string]interface{}{
+		"Ignore": false,
+		"Nested": false,
+	}
+
+	// Check if field has field mask options
+	fieldDesc := field.Descriptor()
+	if fieldDesc == nil {
+		return result
+	}
+
+	extOpts := fieldDesc.GetOptions()
+	if extOpts == nil {
+		return result
+	}
+
+	// For now, return default values. In a full implementation,
+	// this would parse the actual field options from the extension
+	return result
+}
+
+func (fns sharedFuncs) nestedMessageName(field pgs.Field) string {
+	if !fns.isMessage(field) {
+		return ""
+	}
+
+	if field.Type().Embed() != nil {
+		return field.Type().Embed().Name().String()
+	}
+
+	return ""
 }

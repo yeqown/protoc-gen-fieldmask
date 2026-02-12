@@ -1,59 +1,46 @@
-// Copyright (c) 2022 yeqown
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-
 syntax = "proto3";
 
-package fieldmask.option;
+package protoc_gen_fieldmask;
 
 option go_package = "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask;fieldmask";
 
 import "google/protobuf/descriptor.proto";
 
-extend google.protobuf.FieldOptions {
-  // The extension number was applied from https://github.com/protocolbuffers/protobuf/pull/9646.
-  optional FieldMask Option = 1142;
+// ============================================================================
+// Method-level options: 关联 RPC 的 request 和 response
+// ============================================================================
+
+extend google.protobuf.MethodOptions {
+  optional MethodOptions rpc = 1142;
 }
 
-// FieldMask rules applied at the field level
-message FieldMask {
-  InMessageOption in = 1;
-  OutMessageOption out = 2;
+// MethodOptions 定义 RPC 方法级别的 field mask 配置
+message MethodOptions {
+  // request 中 field_mask 字段名称 (默认: "fm")
+  string field_name = 1;
+
+  // mask 模式: FILTER 或 PRUNE (默认: FILTER)
+  MaskMode mode = 2;
 }
 
 enum MaskMode {
-  // FiledMaskMode_Filter indicates that the only fields in fieldmask should be kept.
-  Filter = 0;
-
-  // FiledMaskMode_Prune indicates that the field in fieldmask should be removed.
-  Prune = 1;
+  FILTER = 0;  // 被 mask 的字段才有效，其他字段会被忽略
+  PRUNE = 1;   // 被 mask 的字段会被忽略，其他字段会被返回
 }
 
-// FieldMaskMode indicates the options help generate the field mask extension
-// for in message.
-message InMessageOption {
-  // gen indicates the Message type that was used to apply FieldMask rules. If gen is
-  // set, the fieldmask plugin will generates `MaskIn_FieldName` and `MaskIn_FieldName`
-  // for in message.
-  bool gen = 1;
+// ============================================================================
+// Field-level options: 精细控制字段的 mask 行为
+// ============================================================================
+
+extend google.protobuf.FieldOptions {
+  optional FieldOptions field = 1143;
 }
 
-// OutMessageOption indicates the options help generating the field mask extension
-// for out message.
-message OutMessageOption {
-  // gen indicates the Message type that was used to apply FieldMask rules, if gen is
-  // set, the fieldmask plugin will generates `$outMessage_FieldMask` helper object
-  // to help deal with $outMessage with $inMessage.FieldMask.
-  bool gen = 1;
-  // message indicates the Message type that was used to apply FieldMask rules.
-  string message = 2;
+// FieldOptions 定义单个字段的 mask 行为
+message FieldOptions {
+  // 是否忽略该字段的 mask 方法生成
+  bool ignore = 1;
+
+  // 是否为嵌套字段生成 mask 方法
+  bool nested = 2;
 }
