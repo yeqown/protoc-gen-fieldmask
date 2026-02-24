@@ -3,7 +3,7 @@ package module
 import (
 	pgs "github.com/lyft/protoc-gen-star"
 
-	fieldmask "github.com/yeqown/protoc-gen-fieldmask/proto/protobuf"
+	"github.com/yeqown/protoc-gen-fieldmask/protobuf"
 )
 
 type outFieldMaskContext struct {
@@ -21,7 +21,8 @@ type importPathPair struct {
 }
 
 type fmMessagePair struct {
-	MethodOptions     *fieldmask.MethodOptions
+	Method            pgs.Method
+	MethodOptions     *protobuf.MethodOptions
 	FieldMaskField    pgs.Field
 	InMessage         pgs.Message
 	OutMessage        pgs.Message
@@ -29,13 +30,13 @@ type fmMessagePair struct {
 }
 
 // checkMethodOptions checks if the method has field mask options configured
-func checkMethodOptions(method pgs.Method, debugf func(string, ...interface{})) (*fieldmask.MethodOptions, bool) {
+func checkMethodOptions(method pgs.Method, debugf func(string, ...interface{})) (*protobuf.MethodOptions, bool) {
 	if method == nil {
 		return nil, false
 	}
 
-	var opts fieldmask.MethodOptions
-	_, err := method.Extension(fieldmask.E_Rpc, &opts)
+	var opts protobuf.MethodOptions
+	_, err := method.Extension(protobuf.E_Rpc, &opts)
 	if err != nil {
 		return nil, false
 	}
@@ -62,19 +63,4 @@ func findFieldMaskField(message pgs.Message, fieldName string) (pgs.Field, bool)
 	}
 
 	return nil, false
-}
-
-// checkFieldOptions checks if a field has field mask options configured
-func checkFieldOptions(field pgs.Field) (*fieldmask.FieldOptions, bool) {
-	if field == nil {
-		return nil, false
-	}
-
-	var opts fieldmask.FieldOptions
-	_, err := field.Extension(fieldmask.E_Field, &opts)
-	if err != nil {
-		return nil, false
-	}
-
-	return &opts, true
 }

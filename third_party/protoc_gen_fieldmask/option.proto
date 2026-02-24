@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package protoc_gen_fieldmask;
 
-option go_package = "github.com/yeqown/protoc-gen-fieldmask/proto/fieldmask;fieldmask";
+option go_package = "github.com/yeqown/protoc-gen-fieldmask/protobuf;protobuf";
 
 import "google/protobuf/descriptor.proto";
 
@@ -33,14 +33,14 @@ enum MaskMode {
 // ============================================================================
 
 extend google.protobuf.FieldOptions {
-  optional FieldOptions field = 1143;
+  optional FieldOptions field = 1142;
 }
 
 // FieldOptions 定义单个字段的 mask 行为
 message FieldOptions {
-  // 是否忽略该字段的 mask 方法生成
-  bool ignore = 1;
+  // 是否为该字段生成 mask 方法（默认: false）
+  bool mask = 1;
 
-  // 是否为嵌套字段生成 mask 方法
+  // 是否为嵌套字段生成 mask 方法，仅当对应的字段类型为 Message 时有效（默认: false）
   bool nested = 2;
 }

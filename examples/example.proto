@@ -1,0 +1,242 @@
+syntax = "proto3";
+
+package example;
+
+option go_package = "github.com/yeqown/protoc-gen-fieldmask/examples;example";
+
+import "google/protobuf/field_mask.proto";
+import "protoc_gen_fieldmask/option.proto";
+import "test/common.proto";
+
+// ============================================================================
+// Scenario 1: Custom field_name (using "field_mask" instead of default "fm")
+// ============================================================================
+
+message CreateUserRequest {
+  string username = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string email = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string password = 3;  // Not masked - sensitive data
+  test.common.Address address = 4 [(protoc_gen_fieldmask.field) = {mask: true, nested: true}];
+
+  // Custom field name: "mask" instead of default "fm"
+  google.protobuf.FieldMask mask = 10;
+}
+
+message CreateUserResponse {
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string username = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+  test.common.Address address = 4 [(protoc_gen_fieldmask.field) = {mask: true, nested: true}];
+  int64 created_at = 5 [(protoc_gen_fieldmask.field) = {mask: true}];
+}
+
+// ============================================================================
+// Scenario 2: Service with mixed RPCs - some with fieldmask, some without
+// ============================================================================
+
+service ComprehensiveService {
+  // RPC with fieldmask (FILTER mode)
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: FILTER
+    };
+  }
+
+  // RPC with fieldmask (PRUNE mode)
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: PRUNE
+    };
+  }
+
+  // RPC with custom field_name
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "mask"
+      mode: FILTER
+    };
+  }
+
+  // RPC WITHOUT fieldmask option - should not generate any code
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+}
+
+// ============================================================================
+// Scenario 3: Request/Response with mixed fields - some masked, some not
+// ============================================================================
+
+message GetUserRequest {
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  // include_deleted is NOT masked - control field, not data field
+  bool include_deleted = 2;
+  google.protobuf.FieldMask fm = 3;
+}
+
+message GetUserResponse {
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string username = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+  // password_hash is NOT masked - should never be exposed via fieldmask
+  string password_hash = 4;
+  test.common.Address address = 5 [(protoc_gen_fieldmask.field) = {mask: true, nested: true}];
+  // status is NOT masked - always returned
+  string status = 6;
+  test.common.ContactInfo contact = 7 [(protoc_gen_fieldmask.field) = {mask: true}];
+}
+
+message UpdateUserRequest {
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string username = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+  // version is NOT masked - used for optimistic locking
+  int64 version = 4;
+  test.common.Address address = 5 [(protoc_gen_fieldmask.field) = {mask: true, nested: true}];
+  google.protobuf.FieldMask fm = 6;
+}
+
+message UpdateUserResponse {
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  int64 version = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string updated_at = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+// ============================================================================
+// Scenario 4: Nested messages with masked fields
+// ============================================================================
+
+message ListUsersRequest {
+  int32 page_size = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string page_token = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  // filter is NOT masked - it's a query parameter
+  string filter = 3;
+  google.protobuf.FieldMask fm = 4;
+}
+
+message ListUsersResponse {
+  repeated User users = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string next_page_token = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  int32 total_count = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+}
+
+message User {
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string username = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+  test.common.Address address = 4 [(protoc_gen_fieldmask.field) = {mask: true, nested: true}];
+  test.common.ContactInfo contact = 5 [(protoc_gen_fieldmask.field) = {mask: true}];
+}
+
+// ============================================================================
+// Scenario 5: Cross-package message reference
+// ============================================================================
+
+message GetAddressRequest {
+  string address_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  google.protobuf.FieldMask fm = 2;
+}
+
+message GetAddressResponse {
+  // Using common.Address from third_party package
+  test.common.Address address = 1 [(protoc_gen_fieldmask.field) = {mask: true, nested: true}];
+}
+
+// ============================================================================
+// Scenario 6: Additional scenarios
+// ============================================================================
+
+// 6a. Enum fields with mask
+message UserStatus {
+  enum Status {
+    UNKNOWN = 0;
+    ACTIVE = 1;
+    INACTIVE = 2;
+    SUSPENDED = 3;
+  }
+}
+
+message GetUserByStatusRequest {
+  UserStatus.Status status = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  google.protobuf.FieldMask fm = 2;
+}
+
+message GetUserByStatusResponse {
+  repeated User users = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+}
+
+// 6b. Map fields with mask
+message GetUserMetadataRequest {
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  google.protobuf.FieldMask fm = 2;
+}
+
+message GetUserMetadataResponse {
+  map<string, string> metadata = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  map<string, int64> counters = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+}
+
+// 6c. Oneof with mask
+message GetUserOrOrganizationRequest {
+  string request_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  google.protobuf.FieldMask fm = 2;
+
+  oneof identifier {
+    string user_id = 3;
+    string org_id = 4;
+  }
+}
+
+message GetUserOrOrganizationResponse {
+  string id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string name = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string type = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+}
+
+// RPC for additional scenarios
+service ExtendedService {
+  rpc GetUserByStatus(GetUserByStatusRequest) returns (GetUserByStatusResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: FILTER
+    };
+  }
+
+  rpc GetUserMetadata(GetUserMetadataRequest) returns (GetUserMetadataResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: FILTER
+    };
+  }
+
+  rpc GetUserOrOrganization(GetUserOrOrganizationRequest) returns (GetUserOrOrganizationResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: FILTER
+    };
+  }
+
+  // Cross-package reference
+  rpc GetAddress(GetAddressRequest) returns (GetAddressResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: FILTER
+    };
+  }
+
+  // List with repeated nested messages
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: FILTER
+    };
+  }
+}

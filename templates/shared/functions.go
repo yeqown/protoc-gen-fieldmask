@@ -9,7 +9,7 @@ import (
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	"google.golang.org/protobuf/types/descriptorpb"
 
-	fieldmask "github.com/yeqown/protoc-gen-fieldmask/proto/protobuf"
+	"github.com/yeqown/protoc-gen-fieldmask/protobuf"
 )
 
 func RegisterFunctions(tpl *template.Template, ctx pgsgo.Context) {
@@ -56,7 +56,7 @@ func (fns sharedFuncs) dict(values ...interface{}) (map[string]interface{}, erro
 
 func (fns sharedFuncs) fieldOptions(field pgs.Field) map[string]interface{} {
 	result := map[string]interface{}{
-		"Ignore": false,
+		"Mask":   false,
 		"Nested": false,
 	}
 
@@ -66,15 +66,15 @@ func (fns sharedFuncs) fieldOptions(field pgs.Field) map[string]interface{} {
 	}
 
 	// Try to get the field options extension
-	var opts fieldmask.FieldOptions
-	_, err := field.Extension(fieldmask.E_Field, &opts)
+	var opts protobuf.FieldOptions
+	_, err := field.Extension(protobuf.E_Field, &opts)
 	if err != nil {
 		// No extension found, return defaults
 		return result
 	}
 
 	// Parse the field options
-	result["Ignore"] = opts.Ignore
+	result["Mask"] = opts.Mask
 	result["Nested"] = opts.Nested
 
 	return result
