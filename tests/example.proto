@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package example;
 
-option go_package = "github.com/yeqown/protoc-gen-fieldmask/examples;example";
+option go_package = "github.com/yeqown/protoc-gen-fieldmask/tests;example";
 
 import "google/protobuf/field_mask.proto";
 import "protoc_gen_fieldmask/option.proto";

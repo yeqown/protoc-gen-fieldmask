@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	example "github.com/yeqown/protoc-gen-fieldmask/examples"
 	"github.com/yeqown/protoc-gen-fieldmask/protobuf"
+	example "github.com/yeqown/protoc-gen-fieldmask/tests"
 	common "github.com/yeqown/protoc-gen-fieldmask/third_party/test"
 )
 

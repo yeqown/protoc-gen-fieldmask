@@ -3,7 +3,7 @@
 # ============================================================================
 # A protoc plugin that generates utility code for Google's FieldMask
 
-.PHONY: help install build test clean gen-fm-pb gen-third-party gen-examples gen-all prepare-debug ci all
+.PHONY: help install build test clean gen-fm-pb gen-third-party gen-tests gen-examples gen-all prepare-debug ci all
 
 # Default target
 .DEFAULT_GOAL := help
@@ -45,7 +45,8 @@ clean:
 	@echo "==> Cleaning generated files..."
 	rm -rf bin/
 	rm -f coverage.out coverage.html
-	rm -f examples/*.pb.fm.go
+	rm -f tests/*.pb.fm.go
+	rm -f examples/proto/*.pb.go examples/proto/*.pb.fm.go
 	@echo "==> Clean complete"
 
 # ============================================================================
@@ -70,24 +71,36 @@ gen-fm-pb:
 gen-third-party:
 	@echo "==> Generating third_party test proto files..."
 	protoc \
-		-I=./third_party \
+		-I=. \
 		--go_out=paths=source_relative:. \
 		./third_party/test/common.proto
 	@echo "==> Generated third_party/test/common.pb.go"
+
+## gen-tests: Generate integration test code from proto files
+gen-tests:
+	@echo "==> Generating integration test code..."
+	protoc \
+		-I=. \
+		-I=./third_party \
+		--go_out=paths=source_relative:. \
+		--fieldmask_out=paths=source_relative,lang=go:. \
+		./tests/example.proto
+	@echo "==> Generated tests/example.pb.fm.go"
 
 ## gen-examples: Generate example code from proto files
 gen-examples:
 	@echo "==> Generating example code..."
 	protoc \
 		-I=. \
+		-I=./examples \
 		-I=./third_party \
 		--go_out=paths=source_relative:. \
 		--fieldmask_out=paths=source_relative,lang=go:. \
-		./examples/example.proto
-	@echo "==> Generated example.pb.fm.go"
+		./examples/proto/user.proto
+	@echo "==> Generated examples/proto/user.pb.fm.go"
 
-## gen-all: Generate all proto files (protobuf definitions, third_party, and examples)
-gen-all: gen-fm-pb gen-third-party gen-examples
+## gen-all: Generate all proto files (protobuf definitions, third_party, tests, and examples)
+gen-all: gen-fm-pb gen-third-party gen-tests gen-examples
 	@echo "==> All proto files generated"
 
 ## prepare-debug: Prepare debug data using protoc-gen-debug (requires protoc-gen-debug)
@@ -141,6 +154,7 @@ help:
 	@echo "Code Generation:"
 	@echo "  gen-fm-pb       Generate fieldmask protobuf definitions"
 	@echo "  gen-third-party Generate third_party test proto files"
+	@echo "  gen-tests       Generate integration test code from proto files"
 	@echo "  gen-examples    Generate example code from proto files"
 	@echo "  gen-all         Generate all proto files"
 	@echo "  prepare-debug   Prepare debug data using protoc-gen-debug"

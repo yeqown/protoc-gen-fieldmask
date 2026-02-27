@@ -152,3 +152,9 @@ func AddResPathToFieldMask(fm *fieldmaskpb.FieldMask, path string) {
 	}
 	fm.Paths = append(fm.Paths, PathPrefixResponse+path)
 }
+
+// IsFieldMarked checks if a field is in the mask (marked)
+func IsFieldMarked(mask map[string]struct{}, field string) bool {
+	_, ok := mask[field]
+	return ok
+}
