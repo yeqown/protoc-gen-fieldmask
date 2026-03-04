@@ -4,216 +4,116 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-protoc-gen-fieldmask is a protoc plugin that generates FieldMask utilities for Go. It reduces boilerplate when handling `google.protobuf.FieldMask` in gRPC applications, enabling two main use cases:
-1. **Masking gRPC response fields** - filter or prune fields based on client request
-2. **Incremental updates** - selectively update and process only requested fields
+`protoc-gen-fieldmask` is a protoc plugin that generates utility code for working with Google's FieldMask protobuf type. It helps developers avoid repetitive code when dealing with FieldMask messages in Go applications.
 
 ## Development Commands
 
-### Build & Install
+### Build and Install
 ```bash
-# Install the plugin (builds to $GOPATH/bin)
+# Install the plugin locally
 make install
 
-# Or manually
-go install ./
+# Build the plugin binary
+go build -o bin/protoc-gen-fieldmask ./cmd/protoc-gen-fieldmask
 ```
 
 ### Testing
 ```bash
 # Run all tests
 make test
-
-# Run tests directly
+# or
 go test -v ./... --count=1
 
-# Run specific test
-go test -v ./internal/module/... -run TestName
+# Run specific test file
+go test -v ./module/fieldmask_test.go
 ```
 
-### Code Generation (Debugging)
+### Code Generation
 ```bash
-# Generate protobuf files for the plugin's own proto definitions
+# Generate fieldmask protobuf definitions
 make gen-fm-pb
 
-# Generate example protobuf files
-cd examples && make gen-pb
+# Generate code from proto files
+protoc \
+    -I. \
+    -I$YOUR_PROTO_PATH \
+    --go_out=paths=source_relative:. \
+    --fieldmask_out=paths=source_relative,lang=go:. \
+    your.proto
+```
 
+### Debugging
+```bash
 # Prepare debug data (requires protoc-gen-debug)
 make prepare-debug
-```
-
-### Running the Plugin
-```bash
-# Basic usage
+# or manually:
 protoc \
-  -I. \
-  -I$PROTO_PATH \
-  --go_out=paths=source_relative:. \
-  --fieldmask_out=paths=source_relative,lang=go:. \
-  file.proto
+    -I=./examples/pb \
+    -I=./proto \
+    --plugin=protoc-gen-debug=$(which protoc-gen-debug) \
+    --debug_out="./internal/module/debugdata:." \
+    ./examples/pb/user.proto
 ```
-
-The `lang=go` parameter is **required**. Currently only Go is supported.
 
 ## Architecture
 
-### Plugin Framework
-Built on `protoc-gen-star` (pgs), following standard protoc plugin pattern:
-- Entry point: `main.go` - registers the FieldMask module
-- Core logic: `internal/module/fieldmask.go` - main module implementation
-- Templates: `internal/templates/` - code generation via template files
+### Entry Point
+- `cmd/protoc-gen-fieldmask/main.go`: Plugin entry point using protoc-gen-star framework
+  - Registers the fieldmask module
+  - Applies Go formatting as post-processor
 
-### Execution Pipeline
-The `Execute` method in `fieldmask.go` processes files in four phases:
+### Core Generation Logic (`module/`)
+- `fieldmask.go`: Main module implementation
+  - Implements `pgs.Module` interface
+  - Parses protobuf services and methods
+  - Orchestrates template-based code generation
+- `fm_message_out.go`: Data structures for fieldmask context
+  - `fmMessagePair`: Associates RPC method with request/response messages
+  - `checkMethodOptions()`: Validates method-level fieldmask options
+  - `findFieldMaskField()`: Locates FieldMask field in request message
+- `cache.go`: Message cache for cross-package message lookups
 
-1. **Parse Phase** (`parse()`): Scans protobuf files for FieldMask fields with custom options
-	- Checks for `google.protobuf.FieldMask` fields with `(fieldmask.option.Option)` extension
+### Template System (`templates/`)
+- `template.go`: Template registry factory for Go templates
+- `go/`: Go-specific templates (embedded via go:embed)
+  - `file.tpl`: Main file structure with package declaration
+  - `request_mask.tpl`: Request field masking methods (`Mask_$field`)
+  - `response_mask.tpl`: Response filtering methods (`FieldMask_Filter`, `FieldMask_Prune`)
+  - `marked_checker.tpl`: Field checking utilities (`Masked_$field`)
+- `shared/functions.go`: Template helper functions
 
-2. **Locate Phase** (`locateMessage()`): Finds associated in/out messages
-	- First checks current file for message
-	- Then searches imported packages (with caching via `pkgMessageCache`)
-	- Resolves Go package names and import paths
+### Protobuf Definitions
+- `third_party/protoc_gen_fieldmask/option.proto`: Custom protobuf options for fieldmask configuration
+- `protobuf/`: Generated protobuf Go files
 
-3. **Consummate Phase** (`consummate()`): Resolves import paths and package information
-	- Deduplicates out message variables (fixes #8)
-	- Handles package name conflicts with suffixing
+## Key Concepts
 
-4. **Generate Phase** (`generate()`): Produces code using templates
-	- Loads language-specific templates from registry
-	- Generates `.pb.fm.go` files alongside standard `.pb.go` files
+### FieldMask Options
+The plugin uses custom protobuf options defined in `third_party/protoc_gen_fieldmask/option.proto`:
+- **Method-level options** (`(fieldmask.option.Option).in`/`.out`): Configure which fields generate mask methods
+- **Field-level options**: Fine-grained control over individual field masking behavior
 
-### Template System
-- `internal/templates/registry.go` - template registry supporting multiple languages
-- `internal/templates/go/` - Go-specific templates:
-	- `fm.in.tpl` - input message utilities (MaskIn_* methods)
-	- `fm.out.tpl` - output message utilities (MaskOut_*, MaskedOut_* methods)
-	- `message.tpl` - common message generation
+### Code Generation Flow
+1. Plugin invoked via protoc with `--fieldmask_out` parameter
+2. `main.go` initializes protoc-gen-star framework
+3. `fieldmask.go` parses services/methods with fieldmask options
+4. Template engine generates `.pb.fm.go` files
+5. Go formatter post-processes generated code
 
-### Custom Proto Extension
-`proto/fieldmask/option.proto` defines the FieldMask options:
-- `in.gen`: generate input field mask utilities
-- `out.gen`: generate output field mask utilities
-- `out.message`: specify associated output message (required for out utilities)
+### Masking Modes
+- **FILTER**: Only masked fields are included in response
+- **PRUNE**: Masked fields are removed from response
 
-## Key Constraints & Limitations
+## Testing Strategy
 
-1. **Language**: Currently only Go (multi-language support is TODO)
-2. **Message location**: In and out messages must be in the same proto file
-3. **FieldMask type**: Only supports `google.protobuf.FieldMask`
-4. **Package resolution**: Go `go_package` option must be correctly specified
+- Unit tests in `module/` use `testify` framework
+- Template tests in `templates/registry_test.go`
+- Integration tests in `examples/` demonstrate real usage
+- Debug tests use `protoc-gen-debug` output
 
-## Debugging
+## Important Notes
 
-For debugging the plugin:
-```bash
-# 1. Install protoc-gen-debug
-go install github.com/lyft/protoc-gen-star/protoc-gen-debug@latest
-
-# 2. Prepare debug data
-make prepare-debug
-
-# 3. Run debug test
-go test -v ./internal/module/... -run Test_ForDebug
-```
-
-The debug data is generated to `internal/module/debugdata/` and allows inspecting the parsed protobuf AST.
-
-## Generated Code Patterns
-
-For an input message with FieldMask field:
-- `MaskIn_Field()` - adds field to mask (for incremental updates)
-- `MaskOut_Field()` - adds field to output mask (for response filtering)
-- `FieldMask_Filter()` - returns filter that keeps only masked fields
-- `FieldMask_Prune()` - returns filter that removes masked fields
-- `MaskedIn_Field()`, `MaskedOut_Field()` - check if field is masked
-
-## Module Structure
-
-```
-internal/
-├── module/              # Core plugin logic
-│   ├── fieldmask.go    # Main module and pipeline
-│   ├── fm_message_out.go  # Message processing (renamed from fm_message_in.go)
-│   └── cache.go        # Message caching for imports
-└── templates/          # Code generation templates
-    ├── registry.go     # Template registry
-    ├── shared/         # Shared template functions
-    └── go/             # Go templates
-```
-
-## Refactoring Progress (V2 Design)
-
-### Completed Tasks ✓
-1. **Analyze current project structure and implementation** - Understood existing architecture
-2. **Create new option.proto based on proposal** - Redesigned options using MethodOptions + FieldOptions
-3. **Refactor internal/module to support new options** - Updated fieldmask.go and fm_message_out.go
-4. **Update code generation templates** - Created new templates for V2 API design:
-   - `file.tpl` - Updated main file template
-   - `request_mask.tpl` - New request field masking template
-   - `response_mask.tpl` - New response field masking template
-   - `marked_checker.tpl` - Field checking utilities
-5. **Fix dependencies and build issues** - Resolved Go module dependencies and build errors
-6. **Separate CLI and package modules** - Created independent go.mod for pkg module
-
-### Architecture Changes
-- **Method-level options**: Now uses `MethodOptions` extension on RPC methods instead of field-level options
-- **Field-level options**: Uses `FieldOptions` for fine-grained control over individual fields
-- **Clean separation**: CLI code (main.go, internal/) is separated from library code (pkg/)
-- **New API design**: Follows the proposal with unified FieldMask API supporting both FILTER and PRUNE modes
-
-### Next Steps ⏳
-7. **Test new implementation** - Validate generated code works correctly with examples
-8. **Update examples** - Create comprehensive examples using new V2 API
-9. **Fix template test** - Update registry_go_test.go to work with new template structure
-
-### Usage Example (V2 API)
-
-```protobuf
-syntax = "proto3";
-
-package example;
-
-import "google/protobuf/field_mask.proto";
-import "protoc-gen-fieldmask/options.proto";
-
-message UserInfoRequest {
-  string user_id = 1;
-  google.protobuf.FieldMask fm = 2;
-}
-
-message UserInfoResponse {
-  string user_id = 1;
-  string name = 2;
-  string email = 3 [(protoc_gen_fieldmask.field) = {ignore: true}];
-  Address address = 4 [(protoc_gen_fieldmask.field) = {nested: true}];
-}
-
-service UserService {
-  rpc GetUserInfo(UserInfoRequest) returns (UserInfoResponse) {
-    option (protoc_gen_fieldmask.rpc) = {
-      field_name: "fm"
-      mode: FILTER
-    };
-  }
-}
-```
-
-Generated Go API:
-```go
-// Create field mask with filter mode
-fm := req.FieldMask(fieldmask.FILTER)
-
-// Mark fields to include
-fm.Response().UserId()
-fm.Response().Name()
-fm.Response().Address().Country()
-
-// Check if fields are marked
-if fm.Marked().Response().Name() {
-    // Field is marked
-}
-
-// Apply mask to response
-fm.Response().Apply(&response)
-```
+- Proto files with fieldmask options must specify the `lang=go` parameter
+- The plugin requires `protoc-gen-star` framework for protobuf parsing
+- Generated files use `.pb.fm.go` extension to distinguish from standard `.pb.go` files
+- Cross-package message references require proper import path resolution

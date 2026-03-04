@@ -7,10 +7,12 @@ import (
 
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
-	"github.com/yeqown/protoc-gen-fieldmask/pkg/templates"
+
+	templates2 "github.com/yeqown/protoc-gen-fieldmask/templates"
 )
 
 var goPkgNamePattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9]*$")
+
 var invalidPkgCharsPattern = regexp.MustCompile("[^a-zA-Z0-9]")
 
 const (
@@ -20,46 +22,46 @@ const (
 )
 
 var (
-	_ pgs.Module = (*FieldMaskModule)(nil)
+	_ pgs.Module = (*protocGenFieldmask)(nil)
 )
 
-// FieldMaskModule is a helper type for generating field masks.
-type FieldMaskModule struct {
+// protocGenFieldmask is a helper type for generating field masks.
+type protocGenFieldmask struct {
 	*pgs.ModuleBase
 
 	ctx pgsgo.Context
 
-	registryFactory func(ctx pgsgo.Context) *templates.Registry
-	registry        *templates.Registry
+	registryFactory func(ctx pgsgo.Context) *templates2.Registry
+	registry        *templates2.Registry
 	lang            string
 
 	// pkgMessageCache map[fullPathMessage]Message eg. google.protobuf.Timestamp: Timestamp
 	pkgMessageCache *pkgMessageCache
 }
 
-// FieldMask configures the module with an instance of FieldMaskModule
-func FieldMask() pgs.Module {
-	return &FieldMaskModule{
+// NewModule configures the module with an instance of protocGenFieldmask
+func NewModule() pgs.Module {
+	return &protocGenFieldmask{
 		ModuleBase:      &pgs.ModuleBase{},
 		ctx:             nil,
-		registryFactory: templates.RegistryFactory,
+		registryFactory: templates2.RegistryFactory,
 		registry:        nil,
 		lang:            "",
 		pkgMessageCache: newCache(0),
 	}
 }
 
-func (m *FieldMaskModule) Name() string {
+func (m *protocGenFieldmask) Name() string {
 	return moduleName
 }
 
-func (m *FieldMaskModule) InitContext(ctx pgs.BuildContext) {
+func (m *protocGenFieldmask) InitContext(ctx pgs.BuildContext) {
 	m.ModuleBase.InitContext(ctx)
 	m.ctx = pgsgo.InitContext(ctx.Parameters())
 	m.registry = m.registryFactory(m.ctx)
 }
 
-func (m *FieldMaskModule) Execute(targets map[string]pgs.File, packages map[string]pgs.Package) []pgs.Artifact {
+func (m *protocGenFieldmask) Execute(targets map[string]pgs.File, packages map[string]pgs.Package) []pgs.Artifact {
 	m.lang = m.Parameters().Str(langParam)
 	m.Assert(m.lang != "", " `lang` parameter must be set")
 	module := m.Parameters().Str(moduleParam)
@@ -93,7 +95,7 @@ func (m *FieldMaskModule) Execute(targets map[string]pgs.File, packages map[stri
 }
 
 // parseServices parses the given file and returns a list of RPC methods that have field mask options
-func (m *FieldMaskModule) parseServices(target pgs.File) (pairs []fmMessagePair) {
+func (m *protocGenFieldmask) parseServices(target pgs.File) (pairs []fmMessagePair) {
 	pairs = make([]fmMessagePair, 0, 2)
 
 	// First collect all messages in the file
@@ -122,6 +124,7 @@ func (m *FieldMaskModule) parseServices(target pgs.File) (pairs []fmMessagePair)
 
 			m.Debugf("method %s.%s has fieldmask field %s", service.Name(), method.Name(), fieldMaskField.Name())
 			pairs = append(pairs, fmMessagePair{
+				Method:            method,
 				MethodOptions:     methodOpts,
 				FieldMaskField:    fieldMaskField,
 				InMessage:         requestMessage,
@@ -132,38 +135,6 @@ func (m *FieldMaskModule) parseServices(target pgs.File) (pairs []fmMessagePair)
 	}
 
 	return pairs
-}
-
-// locateMessage finds the message that specified by name. Firstly, it
-// judges whether the message is current file's message. If not, it will try to
-// find the message in import packages, at the same time, the target package import path
-// and package name will be returned.
-func (m *FieldMaskModule) locateMessage(
-	name string, messages map[string]pgs.Message, packages map[string]pgs.Package,
-) (message pgs.Message, importPath, packageName string, ok bool) {
-	if name == "" {
-		m.Debug("locateMessage: message name is empty")
-		return nil, "", "", false
-	}
-
-	if pkg, messageName := extractPackagePrefix(name); pkg != "" {
-		// if the pkg is qualified, it means the message is in import packages.
-		message, ok = lookupMessageFromPackageCached(packages, m.pkgMessageCache, pkg, messageName)
-		if ok {
-			switch m.lang {
-			case "go":
-				option := message.File().Descriptor().GetOptions().GetGoPackage()
-				importPath, packageName = resolveGoPackageOption(option)
-				// TODO(@yeqown): support multi language. now only support go.
-			}
-
-			return message, importPath, packageName, true
-		}
-	}
-
-	// if the pkg is not qualified, it means the message is in current file.
-	message, ok = messages[name]
-	return message, "", "", ok
 }
 
 // lookupMessageFromPackageCached finds the message from the given package and cache.
@@ -271,7 +242,7 @@ func extractPackagePrefix(name string) (pkgPrefix, messageName string) {
 // consummate fm pairs with full qualified OutMessage which means it has
 // import path and package name as long as it is one message type defined
 // in another protobuf file.
-func (m *FieldMaskModule) consummate(
+func (m *protocGenFieldmask) consummate(
 	ctx *outFieldMaskContext, packages map[string]pgs.Package) {
 	m.Debugf("consummating fm pairs with full qualified OutMessage")
 
@@ -288,6 +259,10 @@ func (m *FieldMaskModule) consummate(
 		}
 
 		// Check if the response message is from another package
+		// Skip if OutMessage is from same file as InMessage (no import needed)
+		if pair.OutMessage.File() == pair.InMessage.File() {
+			continue
+		}
 		if importPath, pkgName := m.getImportInfo(pair.OutMessage, packages); importPath != "" && pkgName != "" {
 			// DONE(@yeqown): let import paths unique in same file, package names unique for the same package name.
 			if c, ok := uniqPkgAlias[pkgName]; ok {
@@ -310,7 +285,7 @@ func (m *FieldMaskModule) consummate(
 }
 
 // getImportInfo gets the import path and package name for a message
-func (m *FieldMaskModule) getImportInfo(message pgs.Message, packages map[string]pgs.Package) (importPath, pkgName string) {
+func (m *protocGenFieldmask) getImportInfo(message pgs.Message, packages map[string]pgs.Package) (importPath, pkgName string) {
 	// Check if the message is from another file
 	if message.File() == nil {
 		return "", ""
@@ -328,7 +303,7 @@ func (m *FieldMaskModule) getImportInfo(message pgs.Message, packages map[string
 
 // generate works in file domain, and generate the fieldmask files with templates.
 // It will generate the fieldmask files with the given data.
-func (m *FieldMaskModule) generate(data *outFieldMaskContext) {
+func (m *protocGenFieldmask) generate(data *outFieldMaskContext) {
 	m.Debugf("file (%s) is planned to generate user.pb.fm.go", data.File.Name().String())
 
 	setting := m.registry.Load(m.lang)

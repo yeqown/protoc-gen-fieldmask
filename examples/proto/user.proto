@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package example.user.v1;
+
+option go_package = "github.com/yeqown/protoc-gen-fieldmask/examples/proto;userv1";
+
+import "google/protobuf/field_mask.proto";
+import "protoc_gen_fieldmask/option.proto";
+
+// UserService demonstrates two common FieldMask usage scenarios:
+// 1. Partial Response (FILTER mode): Client specifies which fields to return
+// 2. Partial Update (PRUNE mode): Client specifies which fields to exclude from update
+service UserService {
+  // GetUser returns user information.
+  // Client can specify which fields to include in response using fieldmask.
+  // Only marked fields are returned (FILTER mode).
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: FILTER
+    };
+  }
+
+  // UpdateUser updates user information.
+  // Marked fields are excluded from update (PRUNE mode).
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+    option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mode: PRUNE
+    };
+  }
+}
+
+// ============================================================================
+// Request Messages
+// ============================================================================
+
+message GetUserRequest {
+  // User ID to query
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+
+  // FieldMask for specifying which fields to return in response
+  google.protobuf.FieldMask fm = 2;
+}
+
+message UpdateUserRequest {
+  // User ID to update
+  string user_id = 1;
+
+  // Fields to update (only unmarked fields will be updated)
+  string username = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string phone = 4 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string avatar_url = 5 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string bio = 6 [(protoc_gen_fieldmask.field) = {mask: true}];
+
+  // FieldMask for specifying which fields to EXCLUDE from update
+  google.protobuf.FieldMask fm = 7;
+}
+
+// ============================================================================
+// Response Messages
+// ============================================================================
+
+message GetUserResponse {
+  // User information
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string username = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string phone = 4 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string avatar_url = 5 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string bio = 6 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string status = 7;
+
+  // Sensitive field that should not be returned to clients
+  string password_hash = 8;
+
+  // Timestamps
+  int64 created_at = 10 [(protoc_gen_fieldmask.field) = {mask: true}];
+  int64 updated_at = 11 [(protoc_gen_fieldmask.field) = {mask: true}];
+}
+
+message UpdateUserResponse {
+  // Updated user information
+  string user_id = 1 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string username = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string phone = 4 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string avatar_url = 5 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string bio = 6 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string status = 7;
+
+  // Timestamps
+  int64 updated_at = 10 [(protoc_gen_fieldmask.field) = {mask: true}];
+}

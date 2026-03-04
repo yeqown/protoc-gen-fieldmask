@@ -4,9 +4,9 @@ import (
 	_ "embed"
 	"text/template"
 
-	"github.com/yeqown/protoc-gen-fieldmask/pkg/templates/shared"
-
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+
+	"github.com/yeqown/protoc-gen-fieldmask/templates/shared"
 )
 
 func RegistryFactory(ctx pgsgo.Context) *Registry {

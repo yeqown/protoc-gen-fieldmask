@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package test.common;
+
+option go_package = "github.com/yeqown/protoc-gen-fieldmask/third_party/test;common";
+
+// CommonMessage is a shared message type used across multiple services
+message CommonMessage {
+  string id = 1;
+  string created_at = 2;
+  string updated_at = 3;
+}
+
+// Address is a nested message with multiple fields
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string country = 4;
+  string zip_code = 5;
+
+  // Nested fields for demonstration
+  GeoLocation geo = 6;
+}
+
+// GeoLocation for nested field demonstration
+message GeoLocation {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+// ContactInfo with various field types
+message ContactInfo {
+  string email = 1;
+  string phone = 2;
+  repeated string alternative_emails = 3;
+}

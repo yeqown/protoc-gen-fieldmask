@@ -8,7 +8,7 @@ import (
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/yeqown/protoc-gen-fieldmask/pkg/templates/shared"
+	"github.com/yeqown/protoc-gen-fieldmask/templates/shared"
 )
 
 type testGoTemplateRegistrySuite struct {

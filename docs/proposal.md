@@ -35,8 +35,8 @@ message MethodOptions {
 }
 
 enum MaskMode {
-  FILTER = 0;  // 被 mask 的字段才有效，其他字段会被忽略
-  PRUNE = 1;   // 被 mask 的字段会被忽略，其他字段会被返回
+  FILTER = 0;  // 被 mask 的字段有效，其他字段无效（默认）
+  PRUNE = 1;   // 被 mask 的字段无效，其他字段有效
 }
 
 // ============================================================================
@@ -44,30 +44,41 @@ enum MaskMode {
 // ============================================================================
 
 extend google.protobuf.FieldOptions {
-  optional FieldOptions field = 1143;
+  optional FieldOptions field = 1142;
 }
 
 // FieldOptions 定义单个字段的 mask 行为
 message FieldOptions {
-  // 是否忽略该字段的 mask 方法生成
-  bool ignore = 1;
+  // 是否为该字段生成 mask 方法（默认: false）
+  bool mask = 1;
   
-  // 是否为嵌套字段生成 mask 方法
+  // 是否为嵌套字段生成 mask 方法，仅当对应的字段类型为 Message 时有效（默认: false）
   bool nested = 2;
 }
 ```
 
 ## 使用示例
 
+```bash
+protoc \
+        -I./path/to/proto \
+        --go_out=paths=source_relative:./pb \
+        --fieldmask_out=paths=source_relative,lang=go:./pb \
+        ./pb/user.proto
+```
+
 ### CASE 1: 基本用法
 
+针对单个方法的 request 和 response 中的字段选项进行配置
+
 ```protobuf
+// user.proto
 syntax = "proto3";
 
 package example;
 
 import "google/protobuf/field_mask.proto";
-import "protoc-gen-fieldmask/options.proto";
+import "protoc_gen_fieldmask/option.proto";
 
 message UserInfoRequest {
   string user_id = 1;
@@ -77,13 +88,13 @@ message UserInfoRequest {
 message UserInfoResponse {
   string user_id = 1;
   string name = 2;
-  string email = 3 [(protoc_gen_fieldmask.field) = {ignore: true}];
-  Address address = 4 [(protoc_gen_fieldmask.field) = {nested: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+  Address address = 4 [(protoc_gen_fieldmask.field) = {mask: true, nested: true}];
 }
 
 message Address {
   string country = 1;
-  string province = 2 [(protoc_gen_fieldmask.field) = {ignore: true}]; // 不针对这个字段生成 Mask API
+  string province = 2 [(protoc_gen_fieldmask.field) = {mask: true}]; // 不针对这个字段生成 Mask API
 }
 
 service UserService {
@@ -98,17 +109,40 @@ service UserService {
 
 ### CASE 2: 跨包引用
 
+在 proto 中引用其他包的 message 时，pgfm 不会为其生成 mask 方法，因此 request 和 response 需要成对出现。
+
 ```protobuf
-message UserListRequest {
-  int32 page_size = 1;
-  string page_token = 2;
-  google.protobuf.FieldMask fm = 3;
+// order.proto
+syntax = "proto3";
+
+package example;
+
+import "user.proto";
+
+import "google/protobuf/field_mask.proto";
+import "protoc_gen_fieldmask/option.proto";
+
+message OrderInfoRequest {
+  string order_id = 1;
+  google.protobuf.FieldMask fm = 2;
 }
 
-service UserListService {
-  // 复用 UserInfoResponse，无需 _FM_NEVER_USE hack
-  rpc ListUsers(UserListRequest) returns (UserInfoResponse) {
+message OrderInfoResponse {
+  string order_id = 1;
+  string user_id = 2;
+  example.Address address = 3 [(protoc_gen_fieldmask.field) = {mask: true, nested: true}];
+}
+
+service OrderService {
+  rpc GetUserAddress(example.UserInfoRequest) returns (example.UserInfoRequest) {
     option (protoc_gen_fieldmask.rpc) = {
+      field_name: "fm"
+      mask_mode: FILTER
+    };
+  }
+  
+  rpc GetOrderDetail(OrderInfoRequest) returns (OrderInfoResponse) {
+	option (protoc_gen_fieldmask.rpc) = {
       field_name: "fm"
       mask_mode: FILTER
     };
@@ -116,21 +150,32 @@ service UserListService {
 }
 ```
 
-### CASE 3: 增量更新 (PRUNE 模式)
+### CASE3: 增量更新
+
+针对 Request 中只标记特定字段需要更新，其余字段则不需要。
 
 ```protobuf
-message UpdateUserRequest {
+// update.proto
+syntax = "proto3";
+
+import "google/protobuf/field_mask.proto";
+import "protoc_gen_fieldmask/option.proto";
+
+package example;
+
+message UpdateUserInfoRequest {
   string user_id = 1;
-  string name = 2;
-  string email = 3;
-  google.protobuf.FieldMask update_mask = 4;
+  string name = 2 [(protoc_gen_fieldmask.field) = {mask: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
 }
 
-service UserUpdateService {
-  rpc UpdateUser(UpdateUserRequest) returns (UserInfoResponse) {
+message UpdateUserInfoResponse {}
+
+service IncrementalUpdateService {
+  rpc UpdateUserInfo(UpdateUserInfoRequest) returns (UpdateUserInfoResponse) {
     option (protoc_gen_fieldmask.rpc) = {
-      field_name: "update_mask"
-      mask_mode: PRUNE
+      field_name: "fm"
+      mask_mode: FILTER
     };
   }
 }
@@ -141,263 +186,40 @@ service UserUpdateService {
 ### API 设计概览
 
 ```go
-// 统一入口，指定 mask 模式
-fm := req.FieldMask(FILTER)  // 或 PRUNE
+// 统一 FieldMask 入口
+fm := req.FieldMask()  
 
-// 标记 request 自身字段
-fm.Request().UserId()
-fm.Request().Name()
+// 标记 request 自身字段, 适用于增量更新
+fm.Request().MaskUserId()
+fm.Request().MaskName()
 
-// 标记 response 字段
-fm.Response().Name()
-fm.Response().Address().Country()
+// 标记 response 字段，适用于仅获取特定字段
+fm.Response().MaskName()
+fm.Response().MaskAddress()
+fm.Response().MaskAddress_Country()
 
 // 判断字段是否被标记
-fm.Marked().UserId()           // 判断 request 的 user_id
-fm.Marked().Response().Name()  // 判断 response 的 name
+fm.Request().MaskedUserId()           // 判断 request 的 user_id
+fm.Response().MaskedName()  // 判断 response 的 name
+fm.Response().MaskedAddress()  // 判断 response 的 address
 
-// 应用 mask
-fm.Request().Apply(req)   // 应用到 request
-fm.Response().Apply(resp) // 应用到 response
+resp := new(UserInfoResponse)
+fm.Response().Apply(resp)
 ```
 
----
+## 举例说明
 
-## 生成 API 详细说明
-
-### 1. Request Message 生成的 API
-
-Request message 包含 `google.protobuf.FieldMask` 字段，且在 RPC method 上配置了 `rpc` option。
-
-#### 1.1 入口方法
-
-```go
-// UserInfoRequest 生成
-func (m *UserInfoRequest) FieldMask() *UserInfoRequest_FieldMask
-```
-
-#### 1.2 Request 自身字段操作
-
-```go
-// 获取 Request 字段操作对象
-func (fm *UserInfoRequest_FieldMask) Request() *UserInfoRequest_RequestMask
-
-// 标记 request 的基础字段
-func (rm *UserInfoRequest_RequestMask) UserId() *UserInfoRequest_RequestMask
-func (rm *UserInfoRequest_RequestMask) Name() *UserInfoRequest_RequestMask
-
-// 标记 request 的嵌套字段（如果字段标记了 nested: true）
-// Address() 标记整个 address 字段
-func (rm *UserInfoRequest_RequestMask) Address() *UserInfoRequest_RequestMask
-
-// 进入 Address 的子字段操作
-func (a *Address) FieldMask() *Address_FieldMask
-
-// Address 的子字段
-func (afm *Address_FieldMask) Country() *Address_FieldMask
-func (afm *Address_FieldMask) Province() *Address_FieldMask
-
-// 应用 mask 到 request
-func (rm *UserInfoRequest_RequestMask) Apply(req *UserInfoRequest)
-```
-
-#### 1.3 Response 字段操作
-
-```go
-// 获取 Response 字段操作对象
-func (fm *UserInfoRequest_FieldMask) Response() *UserInfoRequest_ResponseMask
-
-// 标记 response 的基础字段
-func (rm *UserInfoRequest_ResponseMask) UserId() *UserInfoRequest_ResponseMask
-func (rm *UserInfoRequest_ResponseMask) Name() *UserInfoRequest_ResponseMask
-
-// 标记 response 的嵌套字段（如果字段标记了 nested: true）
-// Address() 标记整个 address 字段
-func (rm *UserInfoRequest_ResponseMask) Address() *UserInfoRequest_ResponseMask
-
-// 进入 Address 的子字段操作
-func (rm *UserInfoRequest_ResponseMask) Address() *UserInfoRequest_ResponseMask_Address
-func (a *UserInfoRequest_ResponseMask_Address) FieldMask() *Address_FieldMask
-
-// Address 的子字段
-func (afm *Address_FieldMask) Country() *Address_FieldMask
-func (afm *Address_FieldMask) Province() *Address_FieldMask
-
-// 应用 mask 到 response
-func (rm *UserInfoRequest_ResponseMask) Apply(resp *UserInfoResponse)
-```
-
-#### 1.4 字段判断
-
-```go
-// 获取判断对象
-func (fm *UserInfoRequest_FieldMask) Marked() *UserInfoRequest_Marked
-
-// 判断 request 自身字段
-func (m *UserInfoRequest_Marked) UserId() bool
-func (m *UserInfoRequest_Marked) Name() bool
-func (m *UserInfoRequest_Marked) Address() bool
-
-// 判断 response 字段
-func (m *UserInfoRequest_Marked) Response() *UserInfoRequest_Marked_Response
-func (mr *UserInfoRequest_Marked_Response) UserId() bool
-func (mr *UserInfoRequest_Marked_Response) Name() bool
-func (mr *UserInfoRequest_Marked_Response) Address() bool
-```
-
----
-
-### 2. Response Message 生成的 API
-
-Response message 本身不包含 FieldMask 字段，但被 RPC method 引用。
-
-#### 2.1 独立的 Mask 操作（可选）
-
-如果需要在 response 上直接操作（不通过 request），可以生成：
-
-```go
-// UserInfoResponse 生成独立的 mask 方法
-func (m *UserInfoResponse) NewFieldMask(mode MaskMode) *UserInfoResponse_FieldMask
-
-// 标记字段
-func (fm *UserInfoResponse_FieldMask) UserId() *UserInfoResponse_FieldMask
-func (fm *UserInfoResponse_FieldMask) Name() *UserInfoResponse_FieldMask
-func (fm *UserInfoResponse_FieldMask) Address() *UserInfoResponse_FieldMask_Address
-
-// 应用 mask
-func (fm *UserInfoResponse_FieldMask) Apply(resp *UserInfoResponse)
-
-// 判断字段
-func (fm *UserInfoResponse_FieldMask) Marked() *UserInfoResponse_Marked
-func (m *UserInfoResponse_Marked) UserId() bool
-func (m *UserInfoResponse_Marked) Name() bool
-```
-
-**注意**: Response 的独立 API 是可选的，主要用于：
-- 在没有 request 的情况下操作 response
-- 跨多个 request 共享 response mask 逻辑
-
----
-
-### 3. 普通 Message 生成的 API
-
-普通 message（如 `Address`）如果被标记为 `nested: true`，会生成独立的 FieldMask 操作。
-
-#### 3.1 作为嵌套字段使用
-
-```go
-// Address 作为 UserInfoResponse.address 的嵌套字段
-// 在 Response mask 中生成
-
-// 标记整个 address 字段
-func (rm *UserInfoRequest_ResponseMask) Address() *UserInfoRequest_ResponseMask
-
-// 获取 Address 的 FieldMask 操作对象
-func (rm *UserInfoRequest_ResponseMask) Address() *UserInfoRequest_ResponseMask_Address
-func (a *UserInfoRequest_ResponseMask_Address) FieldMask() *Address_FieldMask
-
-// Address 的字段方法
-func (afm *Address_FieldMask) Country() *Address_FieldMask
-func (afm *Address_FieldMask) Province() *Address_FieldMask
-```
-
-**使用示例**:
-```go
-fm := req.FieldMask(FILTER)
-
-// 标记整个 address
-fm.Response().Address()
-
-// 标记 address 的子字段
-fm2 := fm.Response().Address().FieldMask()
-fm2.Country()
-fm2.Province()
-```
-
-#### 3.2 独立使用（可选）
-
-如果 `Address` 需要独立的 mask 功能：
-
-```go
-// Address 生成独立的 mask 方法
-func (m *Address) NewFieldMask(mode MaskMode) *Address_FieldMask
-
-func (fm *Address_FieldMask) Country() *Address_FieldMask
-func (fm *Address_FieldMask) Province() *Address_FieldMask
-
-func (fm *Address_FieldMask) Apply(addr *Address)
-
-func (fm *Address_FieldMask) Marked() *Address_Marked
-func (m *Address_Marked) Country() bool
-func (m *Address_Marked) Province() bool
-```
-
----
-
-### 4. 字段级别的控制
-
-#### 4.1 ignore: true
+以如下的 proto 定义为例：
 
 ```protobuf
-message UserInfoResponse {
-  string email = 3 [(protoc_gen_fieldmask.field) = {ignore: true}];
-}
-```
+// user.proto
+syntax = "proto3";
 
-**效果**: 不生成 `Email()` 相关方法
+package example;
 
-#### 4.2 nested: true
+import "google/protobuf/field_mask.proto";
+import "protoc_gen_fieldmask/option.proto";
 
-```protobuf
-message UserInfoResponse {
-  Address address = 4 [(protoc_gen_fieldmask.field) = {nested: true}];
-}
-```
-
-**效果**: 生成嵌套字段的 FieldMask 操作
-
-```go
-// 标记整个 address
-func (rm *UserInfoRequest_ResponseMask) Address() *UserInfoRequest_ResponseMask
-
-// 进入 Address 子字段操作
-func (rm *UserInfoRequest_ResponseMask) Address() *UserInfoRequest_ResponseMask_Address
-func (a *UserInfoRequest_ResponseMask_Address) FieldMask() *Address_FieldMask
-
-// Address 的子字段
-func (afm *Address_FieldMask) Country() *Address_FieldMask
-func (afm *Address_FieldMask) Province() *Address_FieldMask
-```
-
-**使用**:
-```go
-fm.Response().Address()  // 标记整个 address
-
-fm2 := fm.Response().Address().FieldMask()
-fm2.Country()  // 标记 address.country
-```
-
-#### 4.3 默认行为（无 option）
-
-```protobuf
-message UserInfoResponse {
-  string name = 2;  // 无 option
-}
-```
-
-**效果**: 生成基础的 mask 方法
-
-```go
-func (rm *UserInfoRequest_ResponseMask) Name() *UserInfoRequest_ResponseMask
-```
-
----
-
-### 5. 完整示例对比
-
-#### Proto 定义
-
-```protobuf
 message UserInfoRequest {
   string user_id = 1;
   google.protobuf.FieldMask fm = 2;
@@ -406,31 +228,131 @@ message UserInfoRequest {
 message UserInfoResponse {
   string user_id = 1;
   string name = 2;
-  string email = 3 [(protoc_gen_fieldmask.field) = {ignore: true}];
-  Address address = 4 [(protoc_gen_fieldmask.field) = {nested: true}];
+  string email = 3 [(protoc_gen_fieldmask.field) = {mask: true}];
+  Address address = 4 [(protoc_gen_fieldmask.field) = {mask: true, nested: true}];
 }
 
 message Address {
   string country = 1;
-  string province = 2;
+  string province = 2 [(protoc_gen_fieldmask.field) = {mask: true}]; // 不针对这个字段生成 Mask API
 }
 
 service UserService {
   rpc GetUserInfo(UserInfoRequest) returns (UserInfoResponse) {
     option (protoc_gen_fieldmask.rpc) = {
       field_name: "fm"
-      mask_mode: FILTER
+      mode: FILTER
     };
   }
 }
 ```
 
----
+最终应该生成如下的代码：`user.pb.fm.go`
 
-## 解决的问题
+```go
+// Code generated by protoc-gen-fieldmask. DO NOT EDIT.
+// versions:
+//  protoc-gen-fieldmask v0.4.1
+//  source: user.proto
+package example
 
-1. **配置简洁**: 只保留必要的配置项，去除冗余
-2. **跨包引用**: 通过 method options 自动关联 request/response，无需 hack
-3. **字段级控制**: 通过 `ignore` 和 `nested` 精细控制字段行为
-4. **双模式支持**: FILTER 和 PRUNE 模式满足不同场景
-5. **命名清晰**: `MaskOut_*` 表示输出字段，`Masked_*` 表示判断是否被 mask
+import (
+	pgfmpb "github.com/yeqown/protoc-gen-fieldmask/protobuf"
+	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+)
+
+func (x *UserInfoRequest) FieldMask() *GetUserInfo_FieldMask {
+	// 1. 根据配置 mode 设定 mask mode
+	// 2. 从 request 中获取 FieldMask, 根据配置的 field_name 进行解析
+	return newGetUserInfo_FieldMask(pgfmpb.MaskMode_FILTER, x.GetFm())
+}
+
+type GetUserInfo_FieldMask struct {
+	mode pgfmpb.MaskMode
+	mask *fieldmaskpb.FieldMask
+
+	req     map[string]struct{}
+	res     map[string]struct{}
+}
+
+func newGetUserInfo_FieldMask(mode pgfmpb.MaskMode, fieldmask *fieldmaskpb.FieldMask) *GetUserInfo_FieldMask {
+	fm := &GetUserInfo_FieldMask{
+		mode: mode,
+		mask: fieldmask,
+		req:  nil,
+		res:  nil,
+	}
+
+	// 根据 fieldmask 来填充 req 和 res
+	if fieldmask == nil || len(fieldmask.GetPaths()) == 0 {
+		return fm
+	}
+	
+	fm.req, fm.res = pgfmpb.SplitPaths(fieldmask)
+
+	return fm
+}
+
+func (fm *GetUserInfo_FieldMask) Request() *GetUserInfo_Req {
+	if fm.req == nil {
+		fm.req = make(map[string]struct{}, 4)
+	}
+	
+	return &GetUserInfo_Req{fm: fm}
+}
+
+func (fm *GetUserInfo_FieldMask) Response() *GetUserInfo_Res {
+	if fm.res == nil {
+		fm.res = make(map[string]struct{}, 4)
+	}
+	
+	return &GetUserInfo_Res{fm: fm}
+}
+
+func (fm *GetUserInfo_FieldMask) setReqFieldPath(path string) { fm.req[path] = struct{}{} }
+func (fm *GetUserInfo_FieldMask) setResFieldPath(path string) { fm.res[path] = struct{}{} }
+
+func (fm *GetUserInfo_FieldMask) hasReqFieldPath(path string) bool {
+	if fm == nil || len(fm.req) == 0 {
+		return false
+	}
+
+	_, exists := fm.req[path]
+	return exists
+}
+
+func (fm *GetUserInfo_FieldMask) hasResFieldPath(path string) bool {
+	if fm == nil || len(fm.res) == 0 {
+		return false
+	}
+
+	_, exists := fm.res[path]
+	return exists
+}
+
+type GetUserInfo_Req struct{ fm *GetUserInfo_FieldMask }
+
+func (r *GetUserInfo_Req) MaskUserId() { r.fm.setReqFieldPath("user_id") }
+
+func (r *GetUserInfo_Req) MaskedUserId() bool { return r.fm.hasReqFieldPath("user_id") }
+
+type GetUserInfo_Res struct{ fm *GetUserInfo_FieldMask }
+
+func (r *GetUserInfo_Res) MaskEmail()           { r.fm.setResFieldPath("email") }
+func (r *GetUserInfo_Res) MaskAddress()         { r.fm.setResFieldPath("address") }
+func (r *GetUserInfo_Res) MaskAddress_Country() { r.fm.setResFieldPath("address.country") }
+
+func (r *GetUserInfo_Res) MaskedEmail() bool           { return r.fm.hasResFieldPath("email") }
+func (r *GetUserInfo_Res) MaskedAddress() bool         { return r.fm.hasResFieldPath("address") }
+func (r *GetUserInfo_Res) MaskedAddress_Country() bool { return r.fm.hasResFieldPath("address.country") }
+
+// 根据 mode 和 fieldmask 来应用 mask，使用 proto 反射来实现
+func (r *GetUserInfo_Res) Apply(resp proto.Message) {
+	if r.fm.mode == pgfmpb.MaskMode_PRUNE {
+		pgfmpb.Prune(resp, r.fm.res)
+		return
+	}
+
+	pgfmpb.Filter(resp, r.fm.res)
+}
+```
